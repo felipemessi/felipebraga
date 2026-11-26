@@ -63,15 +63,30 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Until the preview environment has its secrets (infra/README.md), skip with
+      # a warning instead of failing every pull request. deploy.yml has no such
+      # escape: a production deploy without credentials must fail loudly.
+      - name: Check the preview credentials
+        id: creds
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Preview skipped::The preview environment has no CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID yet."
+            echo "Preview skipped: no Cloudflare credentials in the preview environment." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - if: steps.creds.outputs.skip != 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - if: steps.creds.outputs.skip != 'true'
+        uses: ./.github/actions/setup
+      - if: steps.creds.outputs.skip != 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: preview-dist
           path: dist
       - name: Upload Worker version
+        if: steps.creds.outputs.skip != 'true'
         env:
           WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.json
         run: |
@@ -85,7 +100,7 @@ jobs:
           echo "PREVIEW_URL=$url" >> "$GITHUB_ENV"
           echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
       - name: Comment the preview URL on the PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.creds.outputs.skip != 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |

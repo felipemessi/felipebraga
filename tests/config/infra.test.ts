@@ -279,6 +279,16 @@ describe('infra and deploy: workflows', () => {
       expect(upload).toContain("github.actor != 'dependabot[bot]'");
     });
 
+    it('AC5: skips the upload with a warning while the preview environment has no credentials', () => {
+      const upload = job('preview', 'upload');
+      expect(upload).toContain('id: creds');
+      expect(upload).toContain('::warning title=Preview skipped::');
+      const guarded = upload.match(/steps\.creds\.outputs\.skip != 'true'/g);
+      // checkout, setup, download, upload and the PR comment
+      expect(guarded?.length).toBe(5);
+      expect(job('deploy', 'deploy')).not.toContain('creds');
+    });
+
     it('AC5: fails instead of posting an empty preview URL', () => {
       expect(job('preview', 'upload')).toMatch(/if \[ -z "\$url" \]/);
     });
