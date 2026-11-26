@@ -6,7 +6,7 @@ Skills that take a change in this blog from idea to shipped, tested and document
 
 The workflow is adapted from the **Engineering Workflow Skills** by [JavaScript Mastery](https://github.com/jsmastery-pro). See their [workflow guide](https://github.com/jsmastery-pro/skills/blob/main/docs/workflow-guide.md) in [jsmastery-pro/skills](https://github.com/jsmastery-pro/skills). Thanks to them for the stages, the spec lifecycle and the depth tiers this set builds on.
 
-These skills are a simplified rewrite fitted to this project's [PRD](../../docs/prd.md), [TRD](../../docs/trd.md) and [design handoff](../../design/AGENTS.md). The `branch` and `commit` skills are additions that don't come from the original set.
+These skills are a simplified rewrite fitted to this project's [PRD](../../docs/prd.md), [TRD](../../docs/trd.md) and [design handoff](../../design/AGENTS.md). The `branch`, `commit` and `pr` skills are additions that don't come from the original set.
 
 ## Skills
 
@@ -23,11 +23,12 @@ These skills are a simplified rewrite fitted to this project's [PRD](../../docs/
 | `debug` | Finds the root cause, applies the smallest fix and hands a regression test to `test`. | code |
 | `branch` | Creates `feature/<slug>` from `develop` or `hotfix/<slug>` from `main`. | git |
 | `commit` | Commits in English with Conventional Commits. On `main` or `develop` it runs `branch` first. Never adds co-author or tool attribution. | git |
+| `pr` | Pushes the branch and opens or updates its GitHub PR with `gh` (`feature/*` → `develop`, `hotfix/*` and releases → `main`), using the `document` description. No attribution. | GitHub PR |
 
 ## Typical flow
 
 ```text
-scope → audit → architect → branch → develop → check (verify) → test → check (review) → document → sync → commit
+scope → audit → architect → branch → develop → check (verify) → test → check (review) → document → sync → commit → pr
 ```
 
 Run only the stages a change needs. A bug is just `debug`. The depth tier chosen in `scope` suggests where a feature ends:

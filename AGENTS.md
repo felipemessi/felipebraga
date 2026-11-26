@@ -52,5 +52,6 @@ Planned layout: the TRD's "Estrutura do repositório" section (`src/`, `tests/`,
 | `sync` | context files, scope, specs |
 | `debug` | code (hands a regression test to `test`) |
 | `branch` / `commit` | git |
+| `pr` | GitHub PR (via `gh`) |
 
-Typical flow: `scope → audit → architect → branch → develop → check verify → test → check review → document → sync → commit`. Only the user marks a feature `Done`.
+Typical flow: `scope → audit → architect → branch → develop → check verify → test → check review → document → sync → commit → pr`. Only the user marks a feature `Done`.
