@@ -14,12 +14,24 @@ All notable changes to this project are documented here. The format follows [Kee
 - `infra.yml`: static checks (`fmt`, `validate`, `tflint`, `trivy config`), a plan commented on each pull request, one approved apply of the saved plan, and a weekly drift issue that closes itself when the plan is clean.
 - Config tests in `tests/config/` for the wrangler config, headers, budgets, workflows and Terraform roots, and an e2e check that `dist/_headers` matches `public/_headers`.
 - `infra/README.md` with the environments table and the one-time setup, a Deploy section in `README.md`, and `wrangler` and `@lhci/cli` pinned to exact versions.
+- Article page at `/blog/<slug>` for every published post (drafts and scheduled posts get no route): opening band in the post's `sectionColor`, tag pills, title, description, date and reading-time line, a 2:1 responsive cover (AVIF, WebP, JPEG) and an author band. Dates are shown in `America/Sao_Paulo`, and a date-only `publishDate` keeps its own day.
+- Table of contents: a sticky column on desktop and a `<details>` bar on mobile, with a CSS-only reading-progress bar.
+- Code blocks highlighted by Shiki at build with a token-based light theme, a frame with file name and language, line highlight (`{4}`, `{2-3,7}`), desktop line numbers that are never copied, and a copy button. The button is a 0.6 KB script loaded only on pages with a code block, and it stays hidden without JavaScript or a clipboard API.
+- Mermaid diagrams rendered at build as inline SVG with a required `title` caption, so no Mermaid JS reaches the page.
+- MDX components `Tldr`, `Callout` (`nota`, `dica`, `atencao`, `perigo`) and `Figure` (normal and wide), available in every post without imports. Markdown tables scroll on their own, GFM footnotes use Portuguese labels, and `h2` and `h3` get a self-link anchor.
+- The build fails with a message naming the post on an `h1` in the body, a Mermaid fence without a title, an unknown `Callout` type, or a `Figure` without `alt`.
+- Article SEO: `og:type=article`, `article:*` meta, and a JSON-LD `@graph` with `BlogPosting` and `BreadcrumbList`.
+- CI installs and caches Playwright's Chromium in the jobs that build, to render diagrams, and `lychee` skips `/tags/<id>` until the tag pages exist.
 
 ### Changed
 
 - `.github/dependabot.yml` also updates the local `setup` action and the three Terraform roots.
 - The gitignore test moved to `tests/config/` and covers `.lighthouseci/`.
 - `.env.example` explains that production uses the `workers.dev` address until the domain is decided.
+- The Lighthouse script budget goes from 0 to 2 KB for the copy button; the home still ships no script.
+- The Lighthouse LCP budget is 2.0 s on `/blog/*` (the home keeps 1.5 s), because web fonts count before a cover image paints in the simulated mobile run; RNF1 in the TRD now says LCP < 2.0 s.
+- Fraunces no longer carries the `SOFT` axis (the titles use its default, `SOFT 0`): the font file goes from 62 KB to 37 KB and the estimated LCP of an article with a cover from 1.88 s to 1.65 s.
+- New dependencies: `@astrojs/markdown-remark`, `@shikijs/transformers`, `unist-util-visit`, `rehype-mermaid` and `playwright` (pinned to the `@playwright/test` version), plus `@types/hast` and `@fontsource-variable/instrument-sans` for development.
 
 ### Security
 

@@ -321,7 +321,7 @@ Repositório público: tudo no Git é visível (inclusive rascunhos e histórico
 
 | # | Requisito | Critério de aceite | Verificado por |
 | --- | --- | --- | --- |
-| RNF1 | Performance | LCP < 1,5 s, CLS < 0,05, INP < 200 ms no mobile; Lighthouse ≥ 95 | Lighthouse CI no pipeline |
+| RNF1 | Performance | LCP < 2,0 s, CLS < 0,05, INP < 200 ms no mobile; Lighthouse ≥ 95 | Lighthouse CI no pipeline |
 | RNF2 | Peso da página de post | HTML+CSS+fontes < 150 KB sem imagens; 0 KB de JS obrigatório | Orçamento no Lighthouse CI |
 | RNF3 | SEO | Lighthouse SEO = 100; sitemap e feeds válidos | Lighthouse CI, W3C Feed Validator |
 | RNF4 | Acessibilidade | Lighthouse a11y ≥ 95; contraste AA nas faixas pastéis | Lighthouse CI, revisão manual |

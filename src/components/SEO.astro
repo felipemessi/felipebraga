@@ -20,6 +20,9 @@ const seo = buildSeo({
   <meta property={property} content={content} />
 ))}
 <meta name="twitter:card" content={seo.twitterCard} />
+{seo.articleMeta.map((tag) => (
+  <meta property={tag.property} content={tag.content} />
+))}
 {seo.alternates.map((alt) => (
   <link rel="alternate" type={alt.type} title={alt.title} href={alt.href} />
 ))}

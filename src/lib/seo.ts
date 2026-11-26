@@ -11,6 +11,18 @@ export interface SeoInput {
   image?: string | undefined;
   type?: 'website' | 'article' | undefined;
   noindex?: boolean | undefined;
+  article?: ArticleInput | undefined;
+}
+
+export interface ArticleInput {
+  publishedTime: Date;
+  modifiedTime?: Date | undefined;
+  tags: readonly string[];
+}
+
+export interface MetaTag {
+  property: string;
+  content: string;
 }
 
 export interface SeoMeta {
@@ -20,6 +32,7 @@ export interface SeoMeta {
   robots: string | null;
   openGraph: Record<string, string>;
   twitterCard: string;
+  articleMeta: MetaTag[];
   alternates: { type: string; title: string; href: string }[];
 }
 
@@ -68,6 +81,7 @@ export function buildSeo(input: SeoInput): SeoMeta {
     robots: input.noindex === true ? 'noindex' : null,
     openGraph,
     twitterCard: 'summary_large_image',
+    articleMeta: articleMeta(input.article),
     alternates: [
       {
         type: 'application/rss+xml',
@@ -83,15 +97,103 @@ export function buildSeo(input: SeoInput): SeoMeta {
   };
 }
 
-export function personJsonLd(site: string, image: string): string {
-  const data = {
-    '@context': 'https://schema.org',
+export function articleMeta(article: ArticleInput | undefined): MetaTag[] {
+  if (article === undefined) return [];
+  const tags: MetaTag[] = [
+    {
+      property: 'article:published_time',
+      content: article.publishedTime.toISOString(),
+    },
+  ];
+  if (article.modifiedTime !== undefined) {
+    tags.push({
+      property: 'article:modified_time',
+      content: article.modifiedTime.toISOString(),
+    });
+  }
+  for (const tag of article.tags) {
+    tags.push({ property: 'article:tag', content: tag });
+  }
+  return tags;
+}
+
+function personNode(site: string, image: string) {
+  return {
     '@type': 'Person',
     name: SITE.name,
     url: absoluteUrl(site, '/'),
     image: absoluteUrl(site, image),
     sameAs: sameAs(),
   };
-  // Escape "<" so the payload cannot close the script element.
+}
+
+// Escape "<" so the payload cannot close the script element.
+function serialize(data: unknown): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+export function personJsonLd(site: string, image: string): string {
+  return serialize({
+    '@context': 'https://schema.org',
+    ...personNode(site, image),
+  });
+}
+
+export interface BlogPostingInput {
+  site: string;
+  /** Canonical URL of the post, absolute (may be another site). */
+  url: string;
+  /** The post's own URL on this site, for the breadcrumb. */
+  pageUrl: string;
+  title: string;
+  description: string;
+  publishedTime: Date;
+  modifiedTime?: Date | undefined;
+  /** Processed cover, absolute or site-relative. */
+  image?: string | undefined;
+  /** Author photo, for the `Person`. */
+  authorImage: string;
+}
+
+export function blogPostingNode(input: BlogPostingInput) {
+  return {
+    '@type': 'BlogPosting',
+    headline: input.title,
+    description: input.description,
+    datePublished: input.publishedTime.toISOString(),
+    dateModified: (input.modifiedTime ?? input.publishedTime).toISOString(),
+    author: personNode(input.site, input.authorImage),
+    ...(input.image === undefined
+      ? {}
+      : { image: absoluteUrl(input.site, input.image) }),
+    inLanguage: SITE.locale,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': input.url },
+  };
+}
+
+export function breadcrumbNode(site: string, title: string, url: string) {
+  const items = [
+    { name: 'Início', item: absoluteUrl(site, '/') },
+    { name: 'Artigos', item: absoluteUrl(site, '/blog') },
+    { name: title, item: url },
+  ];
+  return {
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((entry, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      ...entry,
+    })),
+  };
+}
+
+/** One `@graph` with the `BlogPosting` and its `BreadcrumbList`. */
+export function articleJsonLd(input: BlogPostingInput): string {
+  return serialize({
+    '@context': 'https://schema.org',
+    '@graph': [
+      blogPostingNode(input),
+      breadcrumbNode(input.site, input.title, input.pageUrl),
+    ],
+  });
 }

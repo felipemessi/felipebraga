@@ -82,9 +82,17 @@ describe('layout shell config', () => {
     expect(holders).toEqual(['src/lib/links.ts']);
   });
 
-  it('AC9/AC16: keeps logic out of .astro files and ships no client script tags', () => {
+  it('AC9/AC16/AC19: keeps logic out of .astro files; the only script is the copy button in Post', () => {
     for (const path of walk('src').filter((p) => p.endsWith('.astro'))) {
-      expect(read(path), path).not.toMatch(/<script(?![^>]*ld\+json)/);
+      const text = read(path);
+      if (path === 'src/layouts/Post.astro') {
+        const scripts = text.match(/<script[^>]*>[^<]*<\/script>/g) ?? [];
+        expect(scripts.map((script) => script.replace(/\s+/g, ' '))).toEqual([
+          "<script> import '../scripts/copy-code.ts'; </script>",
+        ]);
+      } else {
+        expect(text, path).not.toMatch(/<script(?![^>]*ld\+json)/);
+      }
     }
   });
 });

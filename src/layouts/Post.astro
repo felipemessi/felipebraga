@@ -1,0 +1,222 @@
+---
+import { Picture } from 'astro:assets';
+import type { AstroComponentFactory } from 'astro/runtime/server/index.js';
+import type { ImageMetadata, MarkdownHeading } from 'astro';
+import AuthorBand from '../components/AuthorBand.astro';
+import Callout from '../components/mdx/Callout.astro';
+import Figure from '../components/mdx/Figure.astro';
+import Tldr from '../components/mdx/Tldr.astro';
+import Tag from '../components/Tag.astro';
+import Toc from '../components/Toc.astro';
+import { buildToc, shouldRenderToc } from '../lib/post/toc';
+import type { PostView } from '../lib/post/view';
+import { toneVars } from '../lib/tone';
+import Base from './Base.astro';
+import '../styles/prose.css';
+import '../styles/code.css';
+
+interface Props {
+  view: PostView;
+  title: string;
+  description: string;
+  cover?: ImageMetadata | undefined;
+  coverAlt?: string | undefined;
+  publishedTime: Date;
+  Content: AstroComponentFactory;
+  hasCode: boolean;
+  headings: MarkdownHeading[];
+}
+
+const {
+  view,
+  title,
+  description,
+  cover,
+  coverAlt,
+  publishedTime,
+  Content,
+  hasCode,
+  headings,
+} = Astro.props;
+
+const toc = buildToc(headings);
+const showToc = shouldRenderToc(toc);
+const components = { Tldr, Callout, Figure };
+---
+
+<Base
+  {title}
+  {description}
+  tone={view.tone}
+  type="article"
+  canonical={view.canonical ?? view.path}
+  image={view.ogImage}
+  jsonLd={view.jsonLd}
+  article={{
+    publishedTime,
+    modifiedTime: view.modifiedTime,
+    tags: view.tagLabels,
+  }}
+>
+  <Fragment slot="hero">
+    <div class="hero">
+      <ul class="tags" aria-label="Temas">
+        {view.tags.map((tag) => (
+          <li>
+            <Tag href={tag.href} primary={tag.primary}>
+              {tag.name}
+            </Tag>
+          </li>
+        ))}
+      </ul>
+      <h1>{title}</h1>
+      <p class="lead">{description}</p>
+      <p class="meta">
+        <span class="long">{view.metaLong}</span>
+        <span class="short">{view.metaShort}</span>
+      </p>
+    </div>
+    {cover !== undefined && (
+      <figure class="cover">
+        <Picture
+          src={cover}
+          alt={coverAlt ?? ''}
+          formats={['avif', 'webp']}
+          fallbackFormat="jpeg"
+          widths={[400, 800, 1200, 1600]}
+          sizes="(min-width: 1200px) 1104px, 100vw"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </figure>
+    )}
+  </Fragment>
+
+  {showToc && <Toc {toc} tone={view.tone} variant="bar" />}
+
+  <section data-tone="creme" class="body" style={toneVars(view.tone)}>
+    <div class:list={['container', 'layout', { solo: !showToc }]}>
+      {showToc && <Toc {toc} tone={view.tone} variant="aside" />}
+      <article class="prose">
+        <Content {components} />
+      </article>
+    </div>
+  </section>
+
+  <AuthorBand />
+  {hasCode && <script>
+    import '../scripts/copy-code.ts';
+  </script>}
+</Base>
+
+<style>
+  .hero {
+    max-width: 760px;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+  }
+
+  h1 {
+    font-size: clamp(2.375rem, 5vw, 4rem);
+    line-height: 1.06;
+    font-variation-settings: 'WONK' 1;
+    letter-spacing: -0.012em;
+    overflow-wrap: break-word;
+  }
+
+  .lead {
+    margin-top: var(--space-4);
+    font-size: var(--text-lead);
+    line-height: 1.5;
+    color: #33383e;
+  }
+
+  .meta {
+    margin-top: var(--space-6);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .long {
+    display: none;
+  }
+
+  .cover {
+    margin: 28px 0 0;
+  }
+
+  .cover :global(img) {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-radius: var(--radius-lg);
+  }
+
+  .body {
+    padding: 32px 0 56px;
+  }
+
+  .layout {
+    display: flex;
+    gap: 80px;
+    align-items: flex-start;
+  }
+
+  @media (min-width: 768px) {
+    .tags {
+      margin-bottom: 28px;
+    }
+
+    .lead {
+      margin-top: var(--space-6);
+    }
+
+    .meta {
+      margin-top: var(--space-8);
+      font-size: var(--text-meta);
+    }
+
+    .long {
+      display: inline;
+    }
+
+    .short {
+      display: none;
+    }
+
+    .cover {
+      margin-top: 56px;
+    }
+
+    .body {
+      padding: 56px 0 96px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    /* No Toc column: the article still starts where the hero does. */
+    .solo {
+      padding-left: calc(var(--gutter) + 320px);
+    }
+
+    .hero {
+      margin-left: 320px;
+    }
+
+    .body {
+      padding-top: 80px;
+      padding-bottom: 112px;
+    }
+  }
+</style>
