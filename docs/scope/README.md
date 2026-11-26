@@ -7,7 +7,7 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 ## Milestone 1 — Thin thread: one post live
 | # | Feature | Status | Spec | Notes |
 | --- | --- | --- | --- | --- |
-| 1.1 | Project scaffold (Astro 7, Node 26 LTS, pnpm with `packageManager` pinned, strict TS, lint, Vitest, Playwright + axe, `.gitignore`, `LICENSE`, `BRAND.md`) | Planned | — | Pin TypeScript 6.0.x: `astro check` refuses TS 7 and `typescript-eslint` needs <6.1. Set `engines.node` >=26 to match `.nvmrc`. Run `audit` right after |
+| 1.1 | Project scaffold (Astro 7, Node 26 LTS, pnpm with `packageManager` pinned, strict TS, lint, Vitest, Playwright + axe, `.gitignore`, `LICENSE`, `BRAND.md`) | Built | [spec](../specs/project-scaffold.md) | Pin TypeScript 6.0.x: `astro check` refuses TS 7 and `typescript-eslint` needs <6.1. Set `engines.node` >=26 to match `.nvmrc`. Run `audit` right after |
 | 1.2 | Content schema (`posts`, `tags`, `series`, `pages` collections, Zod rules, `isPublished`, test fixtures) | Planned | — | RN1, RN2, RNF5. Fields as in the TRD |
 | 1.3 | Layout shell (tokens, fonts, Band/Header/Footer, base layout, `<SEO>` head) | Planned | — | Design step 1. Header tone matches the opening band |
 | 1.4 | Article page (MDX components: CodeBlock/Shiki, Callout, Figure, Tldr, Table, Footnotes, anchored headings, Toc, reading time) | Planned | — | Design step 2, the most important screen. Mermaid rendered at build time |
@@ -50,6 +50,6 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 ## Open items
 - **Domain:** undecided (PRD open question). It blocks the production DNS in 1.6 and the canonical URLs and sitemap in 2.8.
 - **Hire me route:** the TRD does not name it. The design uses `/me-contrate`; confirm it in the 2.5 spec.
-- **Assumed specs:** none yet (there is no `docs/specs/`).
+- **Assumed specs:** none (the only spec so far, [project-scaffold](../specs/project-scaffold.md), is `In Progress`, not `Assumed`).
 
 Resolved on 2026-11-25: the stack (Astro 7, Node 26 LTS), routes (`/blog/<slug>`, `/tags/<tag>`, `/series/<serie>`), taxonomy (tags + `sectionColor`) and frontmatter names follow the TRD. `design/AGENTS.md` was updated to match.
