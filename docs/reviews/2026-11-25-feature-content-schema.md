@@ -42,12 +42,13 @@ Reviewer: subagent on a different model (Opus). Each finding was checked against
 
 ## Resolution
 
-Items 1 to 3 and the test gap in item 8 were fixed after this review; the remaining items are still open.
+Items 1 to 9 were fixed after this review; only the suggestions are still open.
 - **1:** tags, series and pages get an explicit `generateId` (`idFromFile`, the file name without its extension) shared with the script. Any id that is not lowercase kebab-case fails the check. Recorded in the spec Decision.
 - **2:** the parser accepts a BOM and fails on a post file with no frontmatter.
 - **3:** `publishDate` and `updatedDate` reject `null`, an empty string, numbers and booleans.
 - **8 (partial):** `pnpm build` is run against `tag-inexistente`, `package.json` is asserted to have the `prebuild` entry, and the parsing now lives in `src/lib` with unit tests (BOM, CRLF, block lists, no frontmatter, invalid YAML). Invalid YAML (item 7) is reported by name as a side effect.
-- **Open:** 4, 5, 6, 9 and the suggestions.
+- **4, 5, 6, 9:** fixed in a second pass. The check reads the object form of a reference and reports a non-string `series`; a folder with both `index.md` and `index.mdx` fails; `canonical` accepts only `http` and `https`; and the script loads `.env.production.local`, `.env.local`, `.env.production` and `.env` with `process.loadEnvFile`, so a real variable wins and Astro and the check read the same dir (verified with a real `.env`).
+- **Open:** the suggestions only.
 
 ## Next step
 
