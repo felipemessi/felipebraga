@@ -32,7 +32,7 @@ The package manager is pnpm (never npm or yarn). Node 26 doesn't ship Corepack, 
 | `pnpm build` | Static build into `dist/`. `prebuild` runs `scripts/check-references.ts` first and exits 1 on a tag or series that does not exist, an id that is not lowercase kebab-case, a post with no frontmatter, or both `index.md` and `index.mdx` in one folder (Astro 7 only logs a dangling reference and exits 0) |
 | `pnpm preview` | Serves `dist/`. Astro backgrounds it when it detects an AI agent; use `astro preview stop` to stop it, or `--ignore-lock` for a foreground server |
 | `pnpm check` | `astro check` (types and schemas) |
-| `pnpm lint` | `eslint .` and `prettier --check .` |
+| `pnpm lint` | `eslint .` and `prettier --check .`; `prelint` runs `astro sync` first so `astro:content` types exist on a clean clone |
 | `pnpm format` | `prettier --write .` (skips `docs/`, `design/`, `.claude/`, `AGENTS.md`) |
 | `pnpm test` / `pnpm test:coverage` | Vitest (`tests/unit/**`) / with coverage and the 80% gate |
 | `pnpm test:e2e` | Builds, serves `dist/` and runs Playwright + axe |

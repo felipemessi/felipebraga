@@ -15,6 +15,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "prelint": "astro sync",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "vitest run",
