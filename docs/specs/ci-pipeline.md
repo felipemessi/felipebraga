@@ -1,5 +1,5 @@
 # CI pipeline
-Status: In Progress
+Status: Accepted
 Scope: 1.5
 
 ## Requirements
@@ -45,7 +45,7 @@ sonar-project.properties
 
 Found by running it on GitHub:
 - lychee 0.24 takes `include_fragments = "full"` (a string) and needs an absolute `root_dir`, so the workflow passes `--root-dir ${{ github.workspace }}/dist`.
-- The placeholder home has no links, and the lychee action fails an empty run by default, so the step sets `failIfEmpty: false`. Remove it once real pages exist, so a wrong path or an empty `dist/` is caught again.
+- The placeholder home had no links, and the lychee action fails an empty run by default, so the step briefly set `failIfEmpty: false`. It is removed now that real pages exist, so a wrong path or an empty `dist/` is caught again.
 - Sonar rejects a CI scan while Automatic Analysis is on; it is now off. The organization `felipemessi` is confirmed (the scan ran and the gate passed).
 - `ci-gate` is a required check on `develop` and `main` (branch protection: no force-push, no deletion, not enforced for admins so the CMS content commits can bypass it). Rulesets in Terraform replace this later (1.6, 3.3).
 

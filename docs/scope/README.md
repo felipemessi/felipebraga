@@ -11,7 +11,7 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 | 1.2 | Content schema (`posts`, `tags`, `series`, `pages` collections, Zod rules, `isPublished`, test fixtures) | Built | [spec](../specs/content-schema.md) | RN1, RN2, RNF5. Fields as in the TRD |
 | 1.3 | Layout shell (tokens, fonts, Band/Header/Footer, base layout, `<SEO>` head) | Built | [spec](../specs/layout-shell.md) | Design step 1. Header tone matches the opening band |
 | 1.4 | Article page (MDX components: CodeBlock/Shiki, Callout, Figure, Tldr, Table, Footnotes, anchored headings, Toc, reading time) | Planned | — | Design step 2, the most important screen. Mermaid rendered at build time |
-| 1.5 | CI pipeline (`ci.yml`: lint, `astro check`, Vitest coverage, build, link check, Playwright, SonarQube gate) | In Progress | [spec](../specs/ci-pipeline.md) | RN13. Content-only changes skip e2e and Sonar |
+| 1.5 | CI pipeline (`ci.yml`: lint, `astro check`, Vitest coverage, build, link check, Playwright, SonarQube gate) | Built | [spec](../specs/ci-pipeline.md) | RN13. Content-only changes skip e2e and Sonar |
 | 1.6 | Infra + deploy (Terraform bootstrap/cloudflare/github, `wrangler.jsonc`, cache/security headers, `deploy.yml`, preview env, Lighthouse CI budgets) | Planned | — | RNF1–RNF4, RNF7–RNF9. Production domain is undecided |
 
 ## Milestone 2 — Read and discover
