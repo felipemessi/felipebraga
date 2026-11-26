@@ -37,7 +37,6 @@ export default defineConfig({
       options: {
         experimental: {
           variableAxis: {
-            SOFT: [[0, 100]],
             WONK: [[0, 1]],
           },
         },

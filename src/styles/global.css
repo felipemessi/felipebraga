@@ -49,9 +49,7 @@ h4 {
 
 h1 {
   font-size: var(--text-h1);
-  font-variation-settings:
-    'SOFT' 60,
-    'WONK' 1;
+  font-variation-settings: 'WONK' 1;
 }
 
 p {

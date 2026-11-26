@@ -29,7 +29,6 @@
   margin: 40px 0 12px;
   font-size: 1.75rem;
   line-height: 1.18;
-  font-variation-settings: 'SOFT' 40;
 }
 
 .prose h3 {
@@ -82,7 +81,6 @@
   font-style: italic;
   font-weight: 400;
   line-height: 1.4;
-  font-variation-settings: 'SOFT' 50;
 }
 
 .prose blockquote p {
