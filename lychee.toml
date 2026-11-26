@@ -1,0 +1,6 @@
+# Internal links and anchors only, checked against the built artifact (dist/).
+# root_dir must be absolute, so the workflow passes --root-dir.
+offline = true
+include_fragments = "full"
+fallback_extensions = ["html"]
+no_progress = true

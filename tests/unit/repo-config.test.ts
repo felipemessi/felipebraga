@@ -52,12 +52,14 @@ describe('project scaffold config', () => {
       '.terraform/x',
       'a.tfstate',
       'a.tfstate.backup',
-      'node_modules',
-      'dist',
-      '.astro',
-      'coverage',
-      'playwright-report',
-      'test-results',
+      // Directory patterns only match a missing path when it is given as a
+      // file inside the directory (a clean CI checkout has none of these yet).
+      'node_modules/x',
+      'dist/x',
+      '.astro/x',
+      'coverage/x',
+      'playwright-report/x',
+      'test-results/x',
     ]) {
       expect(ignored(path), path).toBe(true);
     }

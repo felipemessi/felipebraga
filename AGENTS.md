@@ -15,8 +15,10 @@ Installed today (versions in `package.json`):
 - ESLint 10 (flat config, `typescript-eslint` strict type-checked, `eslint-plugin-astro`) and Prettier with `prettier-plugin-astro`.
 - Vitest with v8 coverage (`src/lib/**`, 80% minimum, `lcov` for Sonar).
 - Playwright (Chromium + WebKit mobile) with `@axe-core/playwright`, run against the built `dist/`.
+- GitHub Actions: `.github/workflows/ci.yml` (lint, `astro check`, Vitest coverage, build, lychee offline link check over `dist/`, Playwright, SonarQube Cloud gate) with `ci-gate` as the single required check. Content-only changes (`src/content/posts/**`) skip e2e and Sonar. Actions are pinned by SHA; Dependabot keeps them and npm current.
+- SonarQube Cloud via the CI action (`sonar-project.properties`, `SONAR_TOKEN` secret); it does not analyze `.astro`.
 
-Not installed yet (the TRD plans them): MDX, content collections, Shiki, Sveltia CMS, Pagefind, Cloudflare Workers Static Assets and `wrangler`, Terraform, GitHub Actions, Sonar. List a tool here only once it is installed.
+Not installed yet (the TRD plans them): MDX, content collections, Shiki, Sveltia CMS, Pagefind, Cloudflare Workers Static Assets and `wrangler`, Terraform, deploy workflow. List a tool here only once it is installed.
 
 The PRD and TRD are the main sources of truth. `design/` covers visuals only and defers to them on any conflict.
 
@@ -53,6 +55,8 @@ tests/e2e/             Playwright + axe
 tests/fixtures/content/  test posts, kept apart from real posts (empty until 1.2)
 astro.config.ts  tsconfig.json  eslint.config.mjs  vitest.config.ts  playwright.config.ts
 pnpm-workspace.yaml    engineStrict
+.github/               workflows/ci.yml, dependabot.yml
+lychee.toml  sonar-project.properties
 LICENSE  BRAND.md  README.md
 ```
 Planned layout: the TRD's "Estrutura do repositório" section (`content/`, `components/`, `layouts/`, `infra/`, `public/`, `.github/workflows/`). URLs have no trailing slash (`trailingSlash: 'never'`, `build.format: 'file'`).
