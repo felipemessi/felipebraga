@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Tokens — Blog Felipe Braga</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f8f3e8}
+a{color:#2f5f8f}a:hover{color:#1f2328}
+</style>
+</helmet>
+<div style="font-family:'Instrument Sans',sans-serif;color:#1f2328;background:#f8f3e8">
+
+<section style="background:#f8f3e8;padding:96px 0 80px">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px">
+<p style="margin:0 0 16px;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#6b5f52">Sistema visual · v0.1</p>
+<h1 style="margin:0;font-family:'Fraunces',serif;font-size:88px;line-height:1;font-weight:500;font-variation-settings:'opsz' 144,'SOFT' 60,'WONK' 1;letter-spacing:-.02em">Tokens</h1>
+<p style="margin:24px 0 0;max-width:640px;font-size:20px;line-height:1.6">Cada seção tem seu próprio fundo pastel em faixa de largura total. O texto é sempre grafite; o tom de destaque da faixa cuida de links, tags, bordas, números e foco.</p>
+</div>
+</section>
+
+<section style="background:#e2ede3;padding:80px 0">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px">
+<h2 style="margin:0 0 8px;font-family:'Fraunces',serif;font-size:36px;font-weight:500;font-variation-settings:'opsz' 72,'SOFT' 40">Cores</h2>
+<p style="margin:0 0 32px;font-size:17px;line-height:1.6;max-width:680px">Contraste medido do destaque contra o fundo da própria faixa (WCAG AA pede 4.5:1 para texto). Grafite #1f2328 passa de 12.6:1 em todas.</p>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+<sc-for list="{{colors}}" as="c" hint-placeholder-count="8">
+<div style="background:{{c.bg}};border:1px solid rgba(31,35,40,.14);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;min-height:200px">
+<div style="display:flex;justify-content:space-between;align-items:baseline">
+<span style="font-family:'Fraunces',serif;font-size:24px;font-weight:500">{{c.name}}</span>
+<span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{{c.ac}};border:1px solid {{c.ac}};border-radius:999px;padding:2px 8px">{{c.ratio}}</span>
+</div>
+<div style="display:flex;gap:8px;align-items:center">
+<span style="width:28px;height:28px;border-radius:999px;background:{{c.ac}}"></span>
+<span style="font-size:15px;color:{{c.ac}};font-weight:600;text-decoration:underline;text-underline-offset:3px">Link de exemplo →</span>
+</div>
+<div style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;margin-top:auto">
+<div>--bg-{{c.id}}: {{c.bg}}</div>
+<div style="color:{{c.ac}}">--accent-{{c.id}}: {{c.ac}}</div>
+<div style="color:#5a5f66">{{c.use}}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:40px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+<div style="background:#fbfaf8;border:1px solid rgba(31,35,40,.14);border-radius:14px;padding:20px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5a5f66;margin-bottom:8px">--text</div>
+<div style="display:flex;gap:12px;align-items:center"><span style="width:28px;height:28px;border-radius:999px;background:#1f2328"></span><span style="font-family:'JetBrains Mono',monospace;font-size:14px">#1f2328 · grafite</span></div>
+</div>
+<div style="background:#fbfaf8;border:1px solid rgba(31,35,40,.14);border-radius:14px;padding:20px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5a5f66;margin-bottom:8px">--text-muted</div>
+<div style="display:flex;gap:12px;align-items:center"><span style="width:28px;height:28px;border-radius:999px;background:#4f555c"></span><span style="font-family:'JetBrains Mono',monospace;font-size:14px">#4f555c · ≥ 6.4:1 em todas</span></div>
+</div>
+<div style="background:#fbfaf8;border:1px solid rgba(31,35,40,.14);border-radius:14px;padding:20px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5a5f66;margin-bottom:8px">--surface (cards, código)</div>
+<div style="display:flex;gap:12px;align-items:center"><span style="width:28px;height:28px;border-radius:999px;background:#fbfaf8;border:1px solid rgba(31,35,40,.2)"></span><span style="font-family:'JetBrains Mono',monospace;font-size:14px">#fbfaf8 · papel</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section style="background:#dfe9f4;padding:80px 0">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px">
+<h2 style="margin:0 0 8px;font-family:'Fraunces',serif;font-size:36px;font-weight:500;font-variation-settings:'opsz' 72,'SOFT' 40">Cor por categoria</h2>
+<p style="margin:0 0 28px;font-size:17px;line-height:1.6;max-width:680px">Tags e capas de post herdam a cor da categoria. Manteiga, rosa e menta ficam livres para as faixas da home e para os callouts.</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px">
+<span style="background:#dfe9f4;border:1px solid #2f5f8f;color:#2f5f8f;border-radius:999px;padding:8px 16px;font-size:15px;font-weight:600">Plataforma · céu</span>
+<span style="background:#e9e3f3;border:1px solid #5e4a8c;color:#5e4a8c;border-radius:999px;padding:8px 16px;font-size:15px;font-weight:600">IA &amp; agentes · lavanda</span>
+<span style="background:#e2ede3;border:1px solid #3f6b48;color:#3f6b48;border-radius:999px;padding:8px 16px;font-size:15px;font-weight:600">Python · sálvia</span>
+<span style="background:#f7e4d8;border:1px solid #9a4a24;color:#9a4a24;border-radius:999px;padding:8px 16px;font-size:15px;font-weight:600">Pessoal · pêssego</span>
+</div>
+</div>
+</section>
+
+<section style="background:#f7e4d8;padding:80px 0">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px">
+<h2 style="margin:0 0 32px;font-family:'Fraunces',serif;font-size:36px;font-weight:500;font-variation-settings:'opsz' 72,'SOFT' 40">Tipografia</h2>
+<div style="display:flex;flex-direction:column;border-top:1px solid rgba(31,35,40,.18)">
+<sc-for list="{{type}}" as="t" hint-placeholder-count="9">
+<div style="display:grid;grid-template-columns:200px minmax(0,1fr) 260px;gap:24px;align-items:baseline;padding:20px 0;border-bottom:1px solid rgba(31,35,40,.18)">
+<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#9a4a24">{{t.token}}</span>
+<span style="font-family:{{t.ff}};font-size:{{t.fs}}px;line-height:{{t.lh}};font-weight:{{t.fw}};font-variation-settings:{{t.fvs}};letter-spacing:{{t.ls}};text-transform:{{t.tt}}">{{t.sample}}</span>
+<span style="font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:#4f555c">{{t.spec}}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin:24px 0 0;font-size:15px;line-height:1.6;max-width:720px;color:#4f555c">Fraunces: opsz automático pelo tamanho; SOFT 40–60 e WONK 1 só no H1 e no display. Corpo limitado a <code style="font-family:'JetBrains Mono',monospace">max-width: 68ch</code> (≈ 70 caracteres).</p>
+</div>
+</section>
+
+<section style="background:#f4edd2;padding:80px 0">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:48px">
+<div>
+<h2 style="margin:0 0 24px;font-family:'Fraunces',serif;font-size:28px;font-weight:500">Espaçamento</h2>
+<div style="display:flex;flex-direction:column;gap:10px">
+<sc-for list="{{space}}" as="s" hint-placeholder-count="10">
+<div style="display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;font-size:13px">
+<span style="width:84px">{{s.name}}</span><span style="height:10px;width:{{s.px}}px;background:#7a5f12;border-radius:2px"></span><span style="color:#4f555c">{{s.px}}px</span>
+</div>
+</sc-for>
+</div>
+<p style="margin:20px 0 0;font-size:14px;line-height:1.6;color:#4f555c">Faixas: 128px de respiro vertical no desktop, 64px no mobile.</p>
+</div>
+<div>
+<h2 style="margin:0 0 24px;font-family:'Fraunces',serif;font-size:28px;font-weight:500">Raios</h2>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px"><span style="height:72px;border:1px solid #7a5f12;border-radius:4px;background:#fbfaf8"></span><span style="font-family:'JetBrains Mono',monospace;font-size:12px">--radius-sm · 4</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="height:72px;border:1px solid #7a5f12;border-radius:8px;background:#fbfaf8"></span><span style="font-family:'JetBrains Mono',monospace;font-size:12px">--radius-md · 8</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="height:72px;border:1px solid #7a5f12;border-radius:14px;background:#fbfaf8"></span><span style="font-family:'JetBrains Mono',monospace;font-size:12px">--radius-lg · 14</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="height:72px;border:1px solid #7a5f12;border-radius:999px;background:#fbfaf8"></span><span style="font-family:'JetBrains Mono',monospace;font-size:12px">--radius-pill · 999</span></div>
+</div>
+</div>
+<div>
+<h2 style="margin:0 0 24px;font-family:'Fraunces',serif;font-size:28px;font-weight:500">Bordas e foco</h2>
+<div style="display:flex;flex-direction:column;gap:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6">
+<div style="padding:14px;border:1px solid rgba(31,35,40,.14);border-radius:8px;background:#fbfaf8">--border: 1px rgba(31,35,40,.14)</div>
+<div style="padding:14px;border:1px solid rgba(31,35,40,.32);border-radius:8px;background:#fbfaf8">--border-strong: 1px rgba(31,35,40,.32)</div>
+<div style="padding:14px;border:1px solid #7a5f12;border-radius:8px;background:#fbfaf8;color:#7a5f12">--border-accent: 1px var(--accent)</div>
+<div style="padding:14px;border-radius:8px;background:#fbfaf8;outline:2px solid #7a5f12;outline-offset:3px">--focus: outline 2px accent, offset 3px</div>
+<div style="color:#4f555c;font-family:'Instrument Sans',sans-serif;font-size:14px">Sem sombras. Alvos de toque ≥ 44px.</div>
+</div>
+</div>
+</div>
+</section>
+
+<section style="background:#f8f3e8;padding:64px 0;border-top:1px solid rgba(31,35,40,.14)">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px">
+<pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;background:#fbfaf8;border:1px solid rgba(31,35,40,.14);border-radius:14px;padding:24px;overflow-x:auto;white-space:pre">:root {
+  --text: #1f2328;  --text-muted: #4f555c;  --surface: #fbfaf8;
+  --bg-creme: #f8f3e8;   --accent-creme: #6b5f52;
+  --bg-salvia: #e2ede3;  --accent-salvia: #3f6b48;
+  --bg-ceu: #dfe9f4;     --accent-ceu: #2f5f8f;
+  --bg-pessego: #f7e4d8; --accent-pessego: #9a4a24;
+  --bg-manteiga: #f4edd2;--accent-manteiga: #7a5f12;
+  --bg-lavanda: #e9e3f3; --accent-lavanda: #5e4a8c;
+  --bg-rosa: #f4e2e7;    --accent-rosa: #94405a;
+  --bg-menta: #dcefe9;   --accent-menta: #2b6b5c;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Instrument Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+/* cada &lt;section data-tone="salvia"&gt; define --bg e --accent locais */
+[data-tone="salvia"] { --bg: var(--bg-salvia); --accent: var(--accent-salvia); }</pre>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3600}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const colors = [
+      ['creme','Creme','#f8f3e8','#6b5f52','5.61:1','hero e rodapé'],
+      ['salvia','Sálvia','#e2ede3','#3f6b48','5.12:1','seção · Python'],
+      ['ceu','Céu','#dfe9f4','#2f5f8f','5.42:1','seção · Plataforma'],
+      ['pessego','Pêssego','#f7e4d8','#9a4a24','5.04:1','seção · Pessoal'],
+      ['manteiga','Manteiga','#f4edd2','#7a5f12','5.15:1','seção · callout dica'],
+      ['lavanda','Lavanda','#e9e3f3','#5e4a8c','5.91:1','seção · IA'],
+      ['rosa','Rosa','#f4e2e7','#94405a','5.38:1','seção · callout perigo'],
+      ['menta','Menta','#dcefe9','#2b6b5c','5.23:1','seção · callout nota']
+    ].map(([id,name,bg,ac,ratio,use]) => ({id,name,bg,ac,ratio,use}));
+    const D="'Fraunces',serif", S="'Instrument Sans',sans-serif", M="'JetBrains Mono',monospace";
+    const type = [
+      ['--text-display','Felipe Braga',D,72,1,500,"'SOFT' 60,'WONK' 1",'-.02em','Fraunces 500 · 88/1.0 · mob 52'],
+      ['--text-h1','Helm sem sustos',D,56,1.05,500,"'SOFT' 50,'WONK' 1",'-.015em','Fraunces 500 · 60/1.05 · mob 38'],
+      ['--text-h2','Por que templates quebram',D,36,1.15,500,"'SOFT' 40",'0','Fraunces 500 · 36/1.15 · mob 28'],
+      ['--text-h3','Valores por ambiente',D,26,1.25,600,'normal','0','Fraunces 600 · 26/1.25 · mob 22'],
+      ['--text-h4','Um detalhe sobre hooks',D,20,1.3,600,'normal','0','Fraunces 600 · 20/1.3 · mob 18'],
+      ['--text-lead','Subtítulo e frases de abertura.',S,22,1.5,400,'normal','0','Instrument 400 · 22/1.5 · mob 19'],
+      ['--text-body','Corpo do texto, confortável para ler longos trechos.',S,19,1.6,400,'normal','0','Instrument 400 · 19/1.6 · mob 17'],
+      ['--text-small','Interface, botões, legendas de card.',S,15,1.5,500,'normal','0','Instrument 400–600 · 15/1.5'],
+      ['--text-mono','12 nov 2026 · 8 min',M,13,1.5,400,'normal','.04em','JetBrains 400 · 13 meta · 15 código']
+    ].map(([token,sample,ff,fs,lh,fw,fvs,ls,spec]) => ({token,sample,ff,fs,lh,fw,fvs,ls,spec,tt: token==='--text-mono'?'uppercase':'none'}));
+    const space = [['--space-1',4],['--space-2',8],['--space-3',12],['--space-4',16],['--space-6',24],['--space-8',32],['--space-12',48],['--space-16',64],['--space-24',96],['--space-32',128]].map(([name,px])=>({name,px}));
+    return { colors, type, space };
+  }
+}
+</script>
+</body>
+</html>

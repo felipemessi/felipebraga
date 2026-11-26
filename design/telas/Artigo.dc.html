@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Artigo — desktop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f8f3e8}
+a{color:#2f5f8f;text-underline-offset:3px}a:hover{color:#1f2328}
+.h2a .anc{opacity:0}.h2a:hover .anc{opacity:1}
+a:focus-visible,button:focus-visible{outline:2px solid #2f5f8f;outline-offset:3px;border-radius:4px}
+.toc a{color:#4f555c;text-decoration:none}.toc a:hover{color:#2f5f8f}
+</style>
+</helmet>
+<div style="font-family:'Instrument Sans',sans-serif;color:#1f2328;background:#f8f3e8;min-height:100vh;display:flex;flex-direction:column">
+
+<header style="background:#dfe9f4">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px;height:76px;display:flex;align-items:center;justify-content:space-between">
+<a href="#" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#1f2328">
+<img src="../assets/felipe-avatar.jpg" alt="" width="40" height="40" style="width:40px;height:40px;flex:none;border-radius:999px;object-fit:cover;border:1px solid rgba(31,35,40,.18);box-sizing:border-box;display:block">
+<span style="font-family:'Fraunces',serif;font-size:20px;font-weight:500">Felipe Braga</span>
+</a>
+<nav aria-label="Principal" style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500">
+<a href="#" style="color:#1f2328;text-decoration:none;padding:12px 14px">Artigos</a>
+<a href="#" style="color:#1f2328;text-decoration:none;padding:12px 14px">Temas</a>
+<a href="#" style="color:#1f2328;text-decoration:none;padding:12px 14px">Me contrate</a>
+<button aria-label="Buscar" style="width:44px;height:44px;border:0;background:transparent;color:#1f2328;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button>
+</nav>
+</div>
+</header>
+
+<section style="background:#dfe9f4;padding:72px 0 80px">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px">
+<div style="margin-left:320px;max-width:760px">
+<div style="display:flex;gap:8px;margin-bottom:28px">
+<a href="#" style="font-size:14px;font-weight:600;color:#2f5f8f;border:1px solid #2f5f8f;border-radius:999px;padding:6px 14px;text-decoration:none">Plataforma</a>
+<a href="#" style="font-size:14px;font-weight:600;color:#2f5f8f;border:1px solid rgba(47,95,143,.4);border-radius:999px;padding:6px 14px;text-decoration:none">helm</a>
+<a href="#" style="font-size:14px;font-weight:600;color:#2f5f8f;border:1px solid rgba(47,95,143,.4);border-radius:999px;padding:6px 14px;text-decoration:none">kubernetes</a>
+</div>
+<h1 style="margin:0;font-family:'Fraunces',serif;font-size:64px;line-height:1.04;font-weight:500;font-variation-settings:'opsz' 144,'SOFT' 50,'WONK' 1;letter-spacing:-.018em">Helm sem sustos: valores por ambiente sem copiar e colar</h1>
+<p style="margin:24px 0 0;font-size:22px;line-height:1.5;color:#33383e">Como organizar values, overrides e segredos para que dev, staging e produção diferenciem só no que realmente precisa.</p>
+<p style="margin:32px 0 0;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#2f5f8f">12 nov 2026 · 9 min de leitura · atualizado 18 nov</p>
+</div>
+<figure style="margin:56px 0 0"><img src="../assets/capa-helm.jpg" alt="Três folhas sobrepostas rotuladas values.yaml, values-prod.yaml e --set secrets" style="display:block;width:100%;aspect-ratio:2/1;object-fit:cover;border:1px solid rgba(47,95,143,.35);border-radius:14px"><figcaption style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#2f5f8f">Capa · as camadas de configuração de um release</figcaption></figure>
+</div>
+</section>
+
+<section style="background:#f8f3e8;padding:80px 0 112px">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px;display:flex;gap:80px;align-items:flex-start">
+<aside class="toc" style="width:240px;flex:none;position:sticky;top:32px">
+<p style="margin:0 0 16px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#6b5f52">Nesta página</p>
+<nav aria-label="Índice" style="display:flex;flex-direction:column;border-left:1px solid rgba(31,35,40,.16);font-size:15px;line-height:1.4">
+<a href="#" style="padding:8px 0 8px 16px">O problema</a>
+<a href="#" style="padding:8px 0 8px 15px;color:#1f2328;font-weight:600;border-left:2px solid #2f5f8f;margin-left:-1px">Um values por camada</a>
+<a href="#" style="padding:6px 0 6px 32px;font-size:14px">Base e ambiente</a>
+<a href="#" style="padding:6px 0 6px 32px;font-size:14px">Segredos fora do repo</a>
+<a href="#" style="padding:8px 0 8px 16px">Validando antes do deploy</a>
+<a href="#" style="padding:8px 0 8px 16px">Resumo</a>
+</nav>
+<div style="margin-top:32px;height:2px;background:rgba(31,35,40,.1);border-radius:2px"><div style="width:38%;height:2px;background:#2f5f8f;border-radius:2px"></div></div>
+<p style="margin:8px 0 0;font-family:'JetBrains Mono',monospace;font-size:12px;color:#6b5f52">38% lido</p>
+</aside>
+
+<article style="max-width:720px;min-width:0;font-size:19px;line-height:1.6">
+<div style="border:1px solid #2f5f8f;border-radius:14px;padding:24px 28px;background:#dfe9f4;margin-bottom:48px">
+<p style="margin:0 0 8px;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#2f5f8f;font-weight:500">TL;DR</p>
+<ul style="margin:0;padding-left:20px;font-size:17px;line-height:1.6">
+<li>Um <code style="font-family:'JetBrains Mono',monospace;font-size:15px">values.yaml</code> base com defaults seguros, e um arquivo pequeno por ambiente.</li>
+<li>Segredos entram em tempo de deploy, nunca no chart.</li>
+<li>Rode <code style="font-family:'JetBrains Mono',monospace;font-size:15px">helm template</code> + schema no CI antes de qualquer <code style="font-family:'JetBrains Mono',monospace;font-size:15px">upgrade</code>.</li>
+</ul>
+</div>
+
+<p style="margin:0 0 24px">Todo time que adota Helm passa pela mesma fase: um <code style="font-family:'JetBrains Mono',monospace;font-size:16px;background:#fbfaf8;border:1px solid rgba(31,35,40,.14);border-radius:4px;padding:1px 6px">values-prod.yaml</code> que começou como cópia do de staging e, seis meses depois, ninguém sabe dizer o que mudou entre eles. Este texto é sobre sair dessa fase<a href="#" style="font-size:13px;vertical-align:super;font-family:'JetBrains Mono',monospace;text-decoration:none;margin-left:2px">1</a>.</p>
+
+<h2 class="h2a" style="margin:56px 0 16px;font-family:'Fraunces',serif;font-size:36px;line-height:1.15;font-weight:500;font-variation-settings:'opsz' 72,'SOFT' 40;position:relative">
+<a class="anc" href="#" aria-label="Link para esta seção" style="position:absolute;left:-36px;top:4px;color:#2f5f8f;text-decoration:none;font-family:'JetBrains Mono',monospace;font-size:24px;opacity:1">#</a>Um values por camada</h2>
+<p style="margin:0 0 24px">A ideia é simples: o arquivo base descreve o serviço; os arquivos de ambiente descrevem <em>só a diferença</em>. Se um override tem mais de vinte linhas, provavelmente é configuração do serviço disfarçada.</p>
+
+<figure style="margin:32px 0;border:1px solid rgba(31,35,40,.16);border-radius:14px;background:#fbfaf8;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:0 8px 0 20px;height:48px;border-bottom:1px solid rgba(31,35,40,.12)">
+<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#4f555c">charts/api/values-prod.yaml</span>
+<span style="display:flex;align-items:center;gap:4px">
+<span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#6b5f52;padding:0 8px">yaml</span>
+<button style="height:36px;padding:0 12px;border:1px solid rgba(31,35,40,.16);border-radius:8px;background:transparent;font:500 13px 'Instrument Sans',sans-serif;color:#1f2328;display:flex;align-items:center;gap:6px;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>Copiar</button>
+</span>
+</div>
+<pre style="margin:0;padding:16px 0;font-family:'JetBrains Mono',monospace;font-size:15px;line-height:1.7;overflow-x:auto"><code><span style="display:block;padding:0 20px"><span style="color:#9b9184;user-select:none;margin-right:20px">1</span><span style="color:#6b5f52;font-style:italic"># só o que difere da base</span></span><span style="display:block;padding:0 20px"><span style="color:#9b9184;margin-right:20px">2</span><span style="color:#2f5f8f">replicaCount</span>: <span style="color:#9a4a24">3</span></span><span style="display:block;padding:0 20px"><span style="color:#9b9184;margin-right:20px">3</span><span style="color:#2f5f8f">image</span>:</span><span style="display:block;padding:0 17px;background:#dfe9f4;border-left:3px solid #2f5f8f"><span style="color:#9b9184;margin-right:20px">4</span>  <span style="color:#2f5f8f">tag</span>: <span style="color:#3f6b48">"1.8.2"</span></span><span style="display:block;padding:0 20px"><span style="color:#9b9184;margin-right:20px">5</span><span style="color:#2f5f8f">resources</span>:</span><span style="display:block;padding:0 20px"><span style="color:#9b9184;margin-right:20px">6</span>  <span style="color:#2f5f8f">limits</span>:</span><span style="display:block;padding:0 20px"><span style="color:#9b9184;margin-right:20px">7</span>    <span style="color:#2f5f8f">memory</span>: <span style="color:#3f6b48">512Mi</span></span><span style="display:block;padding:0 20px"><span style="color:#9b9184;margin-right:20px">8</span><span style="color:#5e4a8c">autoscaling</span>: { <span style="color:#2f5f8f">enabled</span>: <span style="color:#5e4a8c">true</span> }</span></code></pre>
+</figure>
+
+<div role="note" style="display:flex;gap:16px;background:#dcefe9;border:1px solid #2b6b5c;border-radius:14px;padding:20px 24px;margin:32px 0">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2b6b5c" stroke-width="1.8" style="flex:none;margin-top:3px" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8h.01M11 12h1v5h1"></path></svg>
+<div style="font-size:17px;line-height:1.6"><strong style="color:#2b6b5c">Nota.</strong> A ordem dos <code style="font-family:'JetBrains Mono',monospace;font-size:15px">-f</code> importa: o último arquivo vence. Base primeiro, ambiente depois.</div>
+</div>
+
+<h3 style="margin:40px 0 12px;font-family:'Fraunces',serif;font-size:26px;line-height:1.25;font-weight:600">Segredos fora do repo</h3>
+<p style="margin:0 0 16px">Três regras que evitam a maior parte dos incidentes:</p>
+<ol style="margin:0 0 24px;padding-left:24px">
+<li style="margin-bottom:8px">O chart referencia um <code style="font-family:'JetBrains Mono',monospace;font-size:16px">Secret</code> existente pelo nome.</li>
+<li style="margin-bottom:8px">Quem cria o segredo é o pipeline ou o External Secrets, não o chart.</li>
+<li>Nenhum valor sensível em <code style="font-family:'JetBrains Mono',monospace;font-size:16px">values-*.yaml</code>, nem comentado.</li>
+</ol>
+
+<blockquote style="margin:40px 0;padding:4px 0 4px 28px;border-left:2px solid #2f5f8f;font-family:'Fraunces',serif;font-size:26px;line-height:1.4;font-weight:400;font-style:italic;font-variation-settings:'opsz' 36,'SOFT' 50">Configuração boa é a que você consegue ler num diff de pull request sem abrir outro arquivo.</blockquote>
+
+<figure style="margin:40px 0">
+<div style="border:1px solid rgba(31,35,40,.16);border-radius:14px;background:#fbfaf8;padding:32px;display:flex;align-items:center;justify-content:center;gap:20px;font-family:'JetBrains Mono',monospace;font-size:14px">
+<span style="border:1px solid #2f5f8f;color:#2f5f8f;border-radius:8px;padding:12px 16px">values.yaml</span>
+<span aria-hidden="true" style="color:#6b5f52">+</span>
+<span style="border:1px solid #3f6b48;color:#3f6b48;border-radius:8px;padding:12px 16px">values-prod.yaml</span>
+<span aria-hidden="true" style="color:#6b5f52">+</span>
+<span style="border:1px dashed #9a4a24;color:#9a4a24;border-radius:8px;padding:12px 16px">--set secrets</span>
+<span aria-hidden="true" style="color:#6b5f52">→</span>
+<span style="background:#1f2328;color:#f8f3e8;border-radius:8px;padding:12px 16px">release</span>
+</div>
+<figcaption style="margin-top:12px;font-size:14px;line-height:1.5;color:#4f555c">Figura 1 — As três camadas que chegam ao release, na ordem em que são aplicadas.</figcaption>
+</figure>
+
+<p style="margin:0 0 24px">Antes de aplicar, o <code style="font-family:'JetBrains Mono',monospace;font-size:16px;background:#fbfaf8;border:1px solid rgba(31,35,40,.14);border-radius:4px;padding:1px 6px">helm diff</code> mostra exatamente o que cada camada muda no cluster:</p>
+<figure style="margin:32px -160px 40px 0"><img src="../assets/helm-diff.png" alt="Saída do helm diff: réplicas de 2 para 3, imagem de 1.8.1 para 1.8.2 e novo limite de memória de 512Mi" style="display:block;width:100%;height:auto;border:1px solid rgba(31,35,40,.16);border-radius:14px"><figcaption style="margin-top:12px;font-size:14px;line-height:1.5;color:#4f555c">Figura 2 — <code style="font-family:'JetBrains Mono',monospace;font-size:13px">helm diff upgrade</code> com base + produção. Imagem em largura estendida: ocupa a coluna do texto e avança sobre a margem direita.</figcaption></figure>
+<p style="margin:0 0 24px">Com isso no lugar, o próximo passo é <a href="#">validar o resultado renderizado no CI</a>, antes de qualquer cluster ver o manifesto.</p>
+
+<hr style="border:0;border-top:1px solid rgba(31,35,40,.16);margin:56px 0 24px">
+<ol style="margin:0;padding-left:20px;font-size:15px;line-height:1.6;color:#4f555c">
+<li>Se você ainda não chegou nela, guarde este link para daqui a seis meses. <a href="#" aria-label="Voltar ao texto">↩</a></li>
+</ol>
+</article>
+</div>
+</section>
+
+<section style="background:#e2ede3;padding:80px 0">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px">
+<div style="margin-left:320px;max-width:720px;display:flex;gap:24px;align-items:center">
+<img src="../assets/felipe-avatar.jpg" alt="Foto de Felipe Braga" width="72" height="72" style="width:72px;height:72px;flex:none;border-radius:999px;object-fit:cover;border:1px solid rgba(31,35,40,.18);box-sizing:border-box;display:block">
+<div>
+<p style="margin:0;font-family:'Fraunces',serif;font-size:24px;font-weight:500">Felipe Braga</p>
+<p style="margin:4px 0 12px;font-size:17px;line-height:1.5">Apenas um desenvolvedor resolvendo atividades de DevOps em um mundo com IA.</p>
+<div style="display:flex;gap:20px;font-size:15px;font-weight:600"><a href="#" style="color:#3f6b48">RSS</a><a href="#" style="color:#3f6b48">LinkedIn</a></div>
+</div>
+</div>
+</div>
+</section>
+
+<section style="background:#f4edd2;padding:96px 0">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px">
+<h2 style="margin:0 0 32px;font-family:'Fraunces',serif;font-size:32px;font-weight:500">Leia também</h2>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px">
+<sc-for list="{{related}}" as="r" hint-placeholder-count="3">
+<a href="#" style="display:flex;flex-direction:column;gap:12px;padding:24px;border:1px solid rgba(31,35,40,.16);border-radius:14px;background:{{r.bg}};text-decoration:none;color:#1f2328;min-height:180px">
+<span style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:{{r.ac}}">{{r.cat}} · {{r.min}} min</span>
+<span style="font-family:'Fraunces',serif;font-size:24px;line-height:1.2;font-weight:500">{{r.title}}</span>
+</a>
+</sc-for>
+</div>
+<nav aria-label="Navegação entre posts" style="margin-top:48px;padding-top:32px;border-top:1px solid rgba(122,95,18,.3);display:flex;justify-content:space-between;gap:24px">
+<a href="#" style="text-decoration:none;color:#1f2328;max-width:420px"><span style="display:block;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#7a5f12">← Anterior</span><span style="font-family:'Fraunces',serif;font-size:22px">Terraform: módulos que não viram monólito</span></a>
+<a href="#" style="text-decoration:none;color:#1f2328;max-width:420px;text-align:right"><span style="display:block;font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#7a5f12">Próximo →</span><span style="font-family:'Fraunces',serif;font-size:22px">Health checks que mentem</span></a>
+</nav>
+</div>
+</section>
+
+<footer style="margin-top:auto;background:#f8f3e8;border-top:1px solid rgba(31,35,40,.14);padding:64px 0 2rem">
+<div style="max-width:1200px;margin:0 auto;padding:0 48px;display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap">
+<div>
+<p style="margin:0;font-family:'Fraunces',serif;font-size:32px;font-weight:500;font-variation-settings:'SOFT' 60,'WONK' 1">Felipe Braga</p>
+<p style="margin:8px 0 0;font-size:15px;color:#4f555c">Apenas um desenvolvedor resolvendo atividades de DevOps em um mundo com IA.</p>
+</div>
+<nav aria-label="Rodapé" style="display:flex;gap:24px;font-size:15px;font-weight:500"><a href="#" style="color:#1f2328">RSS</a><a href="#" style="color:#1f2328">GitHub</a><a href="#" style="color:#1f2328">LinkedIn</a><a href="#" style="color:#1f2328">E-mail</a></nav>
+</div>
+<p style="max-width:1200px;margin:40px auto 0;padding:0 48px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#6b5f52">© 2026 · Next.js + MDX · sem rastreadores</p>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":5100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { related: [
+      { cat:'Plataforma', min:7, title:'Golden paths: o caminho fácil precisa ser o certo', bg:'#dfe9f4', ac:'#2f5f8f' },
+      { cat:'IA', min:11, title:'Agentes que chamam ferramentas sem derrubar produção', bg:'#e9e3f3', ac:'#5e4a8c' },
+      { cat:'Python', min:6, title:'FastAPI: dependências como contrato', bg:'#e2ede3', ac:'#3f6b48' }
+    ]};
+  }
+}
+</script>
+</body>
+</html>
