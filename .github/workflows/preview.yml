@@ -86,12 +86,26 @@ jobs:
           name: preview-dist
           path: dist
       - name: Upload Worker version
+        id: upload
         if: steps.creds.outputs.skip != 'true'
         env:
           WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.json
         run: |
           alias="$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '-' | cut -c1-40 | sed 's/^-*//; s/-*$//')"
-          pnpm exec wrangler versions upload --preview-alias "$alias"
+          log="$RUNNER_TEMP/wrangler.log"
+          # A version can only be uploaded to a Worker that exists, and the Worker
+          # is created by the first production deploy. Skip until then.
+          if ! pnpm exec wrangler versions upload --preview-alias "$alias" > "$log" 2>&1; then
+            cat "$log"
+            if grep -q "does not yet exist" "$log"; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::warning title=Preview skipped::The Worker does not exist yet. Run the first production deploy."
+              echo "Preview skipped: the Worker does not exist until the first production deploy." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            exit 1
+          fi
+          cat "$log"
           url="$(jq -r 'select(.type == "version-upload") | .preview_alias_url // .preview_url // empty' "$WRANGLER_OUTPUT_FILE_PATH" | tail -n 1)"
           if [ -z "$url" ]; then
             echo "wrangler did not report a preview URL" >&2
@@ -100,7 +114,7 @@ jobs:
           echo "PREVIEW_URL=$url" >> "$GITHUB_ENV"
           echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
       - name: Comment the preview URL on the PR
-        if: github.event_name == 'pull_request' && steps.creds.outputs.skip != 'true'
+        if: github.event_name == 'pull_request' && steps.creds.outputs.skip != 'true' && steps.upload.outputs.skip != 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |

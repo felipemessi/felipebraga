@@ -14,7 +14,7 @@ for (const file of ['.env.local', '.env']) {
   }
 }
 
-// Production domain is undecided (scope 1.6): PUBLIC_SITE_URL swaps it in.
+// The production origin (https://febraga.dev) comes from PUBLIC_SITE_URL.
 const site = resolveSiteUrl(process.env['PUBLIC_SITE_URL']);
 assertLinksReady(site);
 

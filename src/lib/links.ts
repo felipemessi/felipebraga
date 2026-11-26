@@ -1,9 +1,9 @@
 // Single place for every outbound link of the site. Header, footer and the
-// JSON-LD `Person` read only from here. Fill the TODO values before launch.
+// JSON-LD `Person` read only from here. A production build rejects any value that contains TODO.
 export const LINKS = {
-  github: 'https://github.com/TODO',
-  linkedin: 'https://www.linkedin.com/in/TODO',
-  email: 'TODO@example.invalid',
+  github: 'https://github.com/felipemessi',
+  linkedin: 'https://www.linkedin.com/in/felipegbraga/',
+  email: 'felipe@febraga.dev',
   rss: '/rss.xml',
   feed: '/feed.json',
 } as const;

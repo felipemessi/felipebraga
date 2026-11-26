@@ -51,7 +51,7 @@ describe('infra and deploy: wrangler config', () => {
     expect(config).toMatch(/"directory":\s*"\.\/dist"/);
     expect(config).toMatch(/"not_found_handling":\s*"404-page"/);
     expect(config).toMatch(/"html_handling":\s*"drop-trailing-slash"/);
-    expect(config).toMatch(/"workers_dev":\s*true/);
+    expect(config).toMatch(/"workers_dev":\s*false/);
     expect(config).toMatch(/"preview_urls":\s*true/);
     expect(config).toMatch(/"compatibility_date":\s*"\d{4}-\d{2}-\d{2}"/);
     expect(config).not.toMatch(/"main"\s*:/);
@@ -289,6 +289,19 @@ describe('infra and deploy: workflows', () => {
       expect(job('deploy', 'deploy')).not.toContain('creds');
     });
 
+    it('AC5: skips with a warning until the first deploy has created the Worker', () => {
+      const upload = job('preview', 'upload');
+      expect(upload).toContain('id: upload');
+      expect(upload).toContain('does not yet exist');
+      expect(upload).toContain('::warning title=Preview skipped::');
+      // Only that one error is tolerated: any other wrangler failure still fails.
+      expect(upload).toMatch(/exit 0\n\s+fi\n\s+exit 1/);
+      // The PR comment never posts when the upload was skipped.
+      expect(upload).toMatch(
+        /if: github\.event_name == 'pull_request'[^\n]*steps\.upload\.outputs\.skip != 'true'/,
+      );
+    });
+
     it('AC5: fails instead of posting an empty preview URL', () => {
       expect(job('preview', 'upload')).toMatch(/if \[ -z "\$url" \]/);
     });
@@ -422,12 +435,29 @@ describe('infra and deploy: terraform roots', () => {
     expect(readme).toMatch(/workers\.dev/);
   });
 
-  it('AC12: documents every secret as an environment secret', () => {
-    const commands = read('infra/README.md')
+  it('AC12: the local script sets every secret as an environment secret', () => {
+    const commands = read('infra/bootstrap/set-secrets.sh')
       .split('\n')
-      .filter((line) => /^\s*gh (secret|variable) set/.test(line));
+      .filter((line) => /gh (secret|variable) set/.test(line));
     expect(commands.length).toBeGreaterThan(0);
     for (const command of commands) expect(command).toContain('--env');
+    expect(read('infra/README.md')).toContain('set-secrets.sh');
+  });
+
+  it('AC12: the local script never echoes or writes a secret value', () => {
+    const script = read('infra/bootstrap/set-secrets.sh');
+    expect(script).not.toMatch(/\becho\b[^\n]*\$/);
+    expect(script).not.toMatch(/>\s*[^\s&]*\.(env|txt|json)/);
+    expect(script).not.toContain('set -x');
+  });
+
+  it('AC12: the local script feeds secrets through stdin, not a literal --body', () => {
+    const secretLines = read('infra/bootstrap/set-secrets.sh')
+      .split('\n')
+      .filter((line) => /gh secret set/.test(line) && !/^\s*#/.test(line));
+    expect(secretLines.length).toBeGreaterThan(0);
+    // `--body -` stores a literal "-"; the value must come from stdin.
+    for (const line of secretLines) expect(line).not.toMatch(/--body/);
   });
 
   it('AC12: gives each job its own scoped token', () => {
@@ -578,9 +608,9 @@ describe('infra and deploy: dependencies and site url', () => {
     expect(pkg.scripts['lighthouse']).toBe('lhci autorun');
   });
 
-  it('AC15: documents the workers.dev production address and the site url variable', () => {
+  it('AC15: documents the febraga.dev production address and the site url variable', () => {
     const readme = read('README.md');
-    expect(readme).toContain('workers.dev');
+    expect(readme).toContain('https://febraga.dev');
     expect(readme).toContain('PUBLIC_SITE_URL');
   });
 

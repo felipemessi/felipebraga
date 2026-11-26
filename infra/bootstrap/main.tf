@@ -10,8 +10,12 @@ locals {
   account_scope = jsonencode({
     "com.cloudflare.api.account.${var.account_id}" = "*"
   })
+  # Zone permissions on an account-owned token must nest the zones under the
+  # account, or the API answers "Must specify a zone for account owned tokens".
   zone_scope = jsonencode({
-    "com.cloudflare.api.account.zone.*" = "*"
+    "com.cloudflare.api.account.${var.account_id}" = {
+      "com.cloudflare.api.account.zone.*" = "*"
+    }
   })
 }
 
@@ -22,23 +26,26 @@ resource "cloudflare_r2_bucket" "state" {
 }
 
 # Permission groups are looked up by name so no opaque IDs live in the repo.
-data "cloudflare_account_permission_groups" "workers_scripts_write" {
+# They come from the account API token endpoint (the names shown when creating
+# a token), not from `cloudflare_account_permission_groups`, which reads the
+# IAM endpoint and uses other names ("Workers Platform Admin", ...). The name
+# filter must be URL-encoded.
+data "cloudflare_account_api_token_permission_groups_list" "workers_scripts_write" {
   account_id = var.account_id
-  name       = "Workers Scripts Write"
+  name       = urlencode("Workers Scripts Write")
 }
 
-data "cloudflare_account_permission_groups" "r2_storage_write" {
+data "cloudflare_account_api_token_permission_groups_list" "r2_storage_write" {
   account_id = var.account_id
-  name       = "Workers R2 Storage Write"
+  name       = urlencode("Workers R2 Storage Write")
 }
 
-# Optional, only when the custom domain is enabled. Verify the names in the
-# Cloudflare dashboard (API Tokens > permission groups) before turning it on.
-data "cloudflare_account_permission_groups" "domain" {
+# Optional, only when the custom domain is enabled.
+data "cloudflare_account_api_token_permission_groups_list" "domain" {
   for_each = var.enable_domain_permissions ? toset(var.domain_permission_groups) : toset([])
 
   account_id = var.account_id
-  name       = each.value
+  name       = urlencode(each.value)
 }
 
 # One token per job, so each can be revoked on its own and none holds more than
@@ -52,7 +59,7 @@ resource "cloudflare_account_token" "deploy" {
   policies = [{
     effect = "allow"
     permission_groups = [
-      { id = data.cloudflare_account_permission_groups.workers_scripts_write.result[0].id },
+      { id = data.cloudflare_account_api_token_permission_groups_list.workers_scripts_write.result[0].id },
     ]
     resources = local.account_scope
   }]
@@ -66,7 +73,7 @@ resource "cloudflare_account_token" "preview" {
   policies = [{
     effect = "allow"
     permission_groups = [
-      { id = data.cloudflare_account_permission_groups.workers_scripts_write.result[0].id },
+      { id = data.cloudflare_account_api_token_permission_groups_list.workers_scripts_write.result[0].id },
     ]
     resources = local.account_scope
   }]
@@ -83,13 +90,13 @@ resource "cloudflare_account_token" "infra" {
     [{
       effect = "allow"
       permission_groups = [
-        { id = data.cloudflare_account_permission_groups.r2_storage_write.result[0].id },
+        { id = data.cloudflare_account_api_token_permission_groups_list.r2_storage_write.result[0].id },
       ]
       resources = local.account_scope
     }],
     var.enable_domain_permissions ? [{
       effect            = "allow"
-      permission_groups = [for group in data.cloudflare_account_permission_groups.domain : { id = group.result[0].id }]
+      permission_groups = [for group in data.cloudflare_account_api_token_permission_groups_list.domain : { id = group.result[0].id }]
       resources         = local.zone_scope
     }] : [],
   )

@@ -26,17 +26,20 @@ The build jobs of `deploy.yml` and `preview.yml` run the project's code and depe
 
 ## One-time setup (done by the owner)
 
-1. In the Cloudflare dashboard, enable the `workers.dev` subdomain and create a temporary **bootstrap** API token with the permissions _Account API Tokens Write_, _Workers R2 Storage Write_ and _Workers Scripts Write_. Delete it after step 2.
+1. In the Cloudflare dashboard, enable the `workers.dev` subdomain and create a temporary **bootstrap** API token with the permissions _Account API Tokens Write_, _Workers R2 Storage Write_ and _Workers Scripts Write_. Delete it after step 2. Also enable **R2** (R2 Object Storage, needs a payment method on file; the free tier covers the state): until then the bucket fails with error 10042, and the activation can take a few minutes to propagate.
 2. Apply the bootstrap root and keep its outputs at hand (`terraform output -raw <name>` for the sensitive ones):
 
    ```bash
    cd infra/bootstrap
    export CLOUDFLARE_API_TOKEN=<bootstrap token>
    terraform init
-   terraform apply -var account_id=<account id>
+   terraform apply -var account_id=<account id> -var enable_domain_permissions=true
    ```
 
-3. **Check that R2 honours the state lockfile** before trusting it: run `terraform init` and `terraform plan` in `infra/cloudflare` in two terminals at once (with the R2 variables from step 4). The second must fail with a lock error. If it does not, switch the state to HCP Terraform (free tier) and record the change in an ADR.
+3. **Check that R2 honours the state lockfile** before trusting it: run `terraform init` and `terraform plan` in `infra/cloudflare` in two terminals at once (with the R2 variables from step 4). The second must fail with a lock error. If it does not, switch the state to HCP Terraform (free tier) and record the change in an ADR. Verified for this setup: a second `plan` fails with `Error acquiring the state lock` while another run holds it.
+
+   If `terraform init` fails with `tls: handshake failure` against the R2 endpoint, run `export GODEBUG=tlsmlkem=0` first. Go's post-quantum key share is rejected by the R2 S3 endpoint from some networks; `curl --tlsv1.2` reaches it, and the setting only affects the local shell.
+
 4. Create the environments by applying the `github` root locally, bringing the existing repository under management first. Review the plan before applying. `TF_GITHUB_TOKEN` is a fine-grained PAT for this repository only, with these permissions: Administration, Environments, Secrets and variables (read/write), Contents and Pull requests (read), Metadata (read).
 
    ```bash
@@ -49,34 +52,31 @@ The build jobs of `deploy.yml` and `preview.yml` run the project's code and depe
    terraform apply
    ```
 
-5. Set the secrets per environment with the values from the outputs:
+5. Set the secrets per environment. Secrets never go through Terraform, so they stay out of the state: this local script reads the bootstrap outputs and calls `gh secret set`, printing nothing. It asks for `TF_GITHUB_TOKEN` on the terminal.
 
    ```bash
-   gh secret set CLOUDFLARE_API_TOKEN  --env production   # deploy_api_token
-   gh secret set CLOUDFLARE_ACCOUNT_ID --env production
-   gh secret set CLOUDFLARE_API_TOKEN  --env preview      # preview_api_token
-   gh secret set CLOUDFLARE_ACCOUNT_ID --env preview
-   for env in infra-plan infra; do
-     gh secret set CLOUDFLARE_API_TOKEN  --env $env       # infra_api_token
-     gh secret set CLOUDFLARE_ACCOUNT_ID --env $env
-     gh secret set R2_ACCESS_KEY_ID      --env $env       # r2_access_key_id
-     gh secret set R2_SECRET_ACCESS_KEY  --env $env       # r2_secret_access_key
-     gh secret set TF_GITHUB_TOKEN       --env $env
-     gh variable set R2_ENDPOINT         --env $env       # r2_endpoint
-   done
+   cd infra/bootstrap
+   export CLOUDFLARE_ACCOUNT_ID=<account id>
+   ./set-secrets.sh
    ```
 
-6. After the first deploy, put the `workers.dev` address in `infra/github/terraform.tfvars` as `site_url`, and in the root `README.md`.
+6. Run the first deploy (`deploy.yml`, manually or by merging to `main`), then turn on the domain below. Production is [febraga.dev](https://febraga.dev); `site_url` in `infra/github/terraform.tfvars` already holds it.
 
 ### Turning on the custom domain
 
-Set `enable_domain_permissions = true` in `bootstrap/` and apply it, so the infra token can manage the zone, DNS and Worker routes (check the permission group names in the dashboard first). Update the `infra` and `infra-plan` secret with the new token value, then set `domain` in `cloudflare/`. The zone has `prevent_destroy`: setting `domain` back to `null` makes `apply` fail instead of deleting the zone.
+The production domain is `febraga.dev`. The permission group names used for the zone ("Zone Write", "DNS Write", "Workers Routes Write") were checked against the account's permission groups and exist.
+
+1. Create `febraga.dev` as a zone in Cloudflare by Terraform: with `enable_domain_permissions=true` applied in `bootstrap/` (step 2 passes it), set `domain = "febraga.dev"` in `cloudflare/` only **after the first deploy**, because the Worker domain attaches to a Worker that must already exist.
+2. If the domain is registered elsewhere, change its nameservers to the ones Cloudflare shows for the zone. If the zone already exists in Cloudflare, import it first (`terraform import`) or the apply fails.
+3. The zone has `prevent_destroy`: setting `domain` back to `null` makes `apply` fail instead of deleting the zone.
+
+Production has `workers_dev` off in `wrangler.jsonc`. Keep the account's `workers.dev` subdomain enabled (step 1), because preview URLs still use it.
 
 ## Pipeline
 
 [infra.yml](../.github/workflows/infra.yml) checks every root (`fmt`, `validate`, `tflint`, `trivy config`) and posts a plan on each same-repository PR that touches `infra/`. A merge to `main` saves each plan as a one-day artifact (it holds no secret) and the `apply` job applies those exact plans after one approval in the `infra` environment: read the _plan_ job summaries before approving. A weekly plan opens an issue when it finds drift and closes it when the plan is clean again.
 
-Until the secrets exist, `preview.yml` skips its upload and `infra.yml` skips its plan and apply, each with a warning, so pull requests stay green during the one-time setup. `deploy.yml` has no such escape: a production deploy without credentials fails.
+Until the secrets exist (and, for previews, until the first production deploy has created the Worker), `preview.yml` skips its upload and `infra.yml` skips its plan and apply, each with a warning, so pull requests stay green during the one-time setup. `deploy.yml` has no such escape: a production deploy without credentials fails.
 
 The `production` environment has no required reviewer on purpose: CMS content commits use it, and they must go live in minutes. Only infra applies wait for approval.
 
