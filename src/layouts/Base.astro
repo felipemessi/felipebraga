@@ -2,6 +2,7 @@
 import { Font } from 'astro:assets';
 import '../styles/tokens.css';
 import '../styles/global.css';
+import Band from '../components/Band.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import SEO from '../components/SEO.astro';
@@ -12,6 +13,7 @@ interface Props {
   title?: string;
   description?: string;
   tone?: Tone;
+  canonical?: string;
   image?: string;
   type?: 'website' | 'article';
   noindex?: boolean;
@@ -22,6 +24,7 @@ const {
   title,
   description,
   tone = DEFAULT_TONE,
+  canonical,
   image,
   type,
   noindex,
@@ -34,7 +37,16 @@ const path = Astro.url.pathname;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <SEO {title} {description} {path} {image} {type} {noindex} {jsonLd} />
+    <SEO
+      {title}
+      {description}
+      {path}
+      {canonical}
+      {image}
+      {type}
+      {noindex}
+      {jsonLd}
+    />
     <Font
       cssVariable="--font-fraunces"
       preload={[{ subset: 'latin', style: 'normal' }]}
@@ -51,6 +63,11 @@ const path = Astro.url.pathname;
     </a>
     <Header {tone} />
     <main id="conteudo">
+      {Astro.slots.has('hero') && (
+        <Band {tone}>
+          <slot name="hero" />
+        </Band>
+      )}
       <slot />
     </main>
     <Footer />

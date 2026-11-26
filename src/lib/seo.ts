@@ -6,6 +6,8 @@ export interface SeoInput {
   description?: string | undefined;
   path: string;
   site: string;
+  /** Overrides the canonical URL, for posts republished from elsewhere. */
+  canonical?: string | undefined;
   image?: string | undefined;
   type?: 'website' | 'article' | undefined;
   noindex?: boolean | undefined;
@@ -22,6 +24,7 @@ export interface SeoMeta {
 }
 
 export function absoluteUrl(site: string, path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
   const origin = new URL(site).origin;
   // `build.format: 'file'` exposes `/index.html` and `/x.html` as pathnames.
   const clean = path.replace(/(\/index)?\.html$/, '').replace(/\/+$/, '');
@@ -39,7 +42,7 @@ export function buildTitle(title?: string): string {
 export function buildSeo(input: SeoInput): SeoMeta {
   const title = buildTitle(input.title);
   const description = input.description ?? SITE.tagline;
-  const canonical = absoluteUrl(input.site, input.path);
+  const canonical = absoluteUrl(input.site, input.canonical ?? input.path);
   const openGraph: Record<string, string> = {
     'og:title': title,
     'og:description': description,

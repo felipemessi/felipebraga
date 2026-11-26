@@ -1,6 +1,5 @@
 ---
 import avatar from '../assets/felipe-avatar.jpg';
-import Band from '../components/Band.astro';
 import Base from '../layouts/Base.astro';
 import { personJsonLd } from '../lib/seo';
 import { SITE } from '../lib/site';
@@ -11,11 +10,11 @@ const jsonLd = personJsonLd(
 );
 ---
 
-<Base description={SITE.tagline} {jsonLd}>
-  <Band tone="creme">
+<Base description={SITE.tagline} image={avatar.src} {jsonLd}>
+  <Fragment slot="hero">
     <h1>{SITE.name}</h1>
     <p class="tagline">{SITE.tagline}</p>
-  </Band>
+  </Fragment>
 </Base>
 
 <style>
