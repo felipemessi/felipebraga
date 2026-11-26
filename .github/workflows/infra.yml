@@ -1,0 +1,210 @@
+name: Infra
+
+# Terraform for Cloudflare and GitHub. Pull requests that touch infra/ get
+# static checks and a plan comment; a merge to main applies behind the manual
+# approval of the `infra` environment; a weekly plan reports drift as an issue.
+# The bootstrap root is applied once, locally, and is never run here.
+
+on:
+  pull_request:
+    paths: ['infra/**', '.github/workflows/infra.yml']
+  push:
+    branches: [main]
+    paths: ['infra/**', '.github/workflows/infra.yml']
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: false
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+  AWS_ENDPOINT_URL_S3: ${{ vars.R2_ENDPOINT }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  TF_VAR_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+  TF_IN_AUTOMATION: 'true'
+
+jobs:
+  static:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        root: [bootstrap, cloudflare, github]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.2
+      - uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
+      - run: terraform fmt -check -recursive
+        working-directory: infra/${{ matrix.root }}
+      - run: terraform init -backend=false -input=false
+        working-directory: infra/${{ matrix.root }}
+      - run: terraform validate
+        working-directory: infra/${{ matrix.root }}
+      - run: tflint --init --config="$GITHUB_WORKSPACE/infra/.tflint.hcl"
+        working-directory: infra/${{ matrix.root }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: tflint --config="$GITHUB_WORKSPACE/infra/.tflint.hcl"
+        working-directory: infra/${{ matrix.root }}
+
+  trivy:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: infra
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          trivyignores: infra/.trivyignore
+
+  plan:
+    if: github.event_name != 'schedule'
+    needs: [static, trivy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        root: [cloudflare, github]
+    env:
+      GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+      - run: terraform init -input=false
+        working-directory: infra/${{ matrix.root }}
+      - name: Plan
+        working-directory: infra/${{ matrix.root }}
+        run: |
+          set -o pipefail
+          terraform plan -input=false -no-color -lock-timeout=60s | tee "$RUNNER_TEMP/plan.txt"
+      - name: Plan in the job summary
+        if: always()
+        run: |
+          {
+            echo "### Plan: ${{ matrix.root }}"
+            echo '```'
+            tail -c 60000 "$RUNNER_TEMP/plan.txt" || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Comment the plan on the PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ROOT: ${{ matrix.root }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require('node:fs');
+            const root = process.env.ROOT;
+            const marker = `<!-- terraform-plan-${root} -->`;
+            let plan = '(no plan output)';
+            try {
+              plan = fs.readFileSync(`${process.env.RUNNER_TEMP}/plan.txt`, 'utf8').slice(-60000);
+            } catch {}
+            const body = `${marker}\n### Terraform plan: \`${root}\`\n\`\`\`\n${plan}\n\`\`\``;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((c) => c.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+  apply:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Manual approval: the owner reads the plan in the plan job summary first.
+    environment: infra
+    strategy:
+      max-parallel: 1
+      matrix:
+        root: [cloudflare, github]
+    env:
+      GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.2
+      - run: terraform init -input=false
+        working-directory: infra/${{ matrix.root }}
+      - run: terraform apply -input=false -auto-approve -lock-timeout=60s
+        working-directory: infra/${{ matrix.root }}
+
+  drift:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        root: [cloudflare, github]
+    env:
+      GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.2
+          terraform_wrapper: false
+      - run: terraform init -input=false
+        working-directory: infra/${{ matrix.root }}
+      - name: Plan and detect drift
+        id: plan
+        working-directory: infra/${{ matrix.root }}
+        run: |
+          set +e
+          terraform plan -input=false -no-color -detailed-exitcode -lock-timeout=60s > "$RUNNER_TEMP/plan.txt" 2>&1
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          [ "$code" -ne 1 ]
+      - name: Open or update the drift issue
+        if: steps.plan.outputs.code == '2'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ROOT: ${{ matrix.root }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const fs = require('node:fs');
+            const root = process.env.ROOT;
+            const title = `Terraform drift: ${root}`;
+            const plan = fs.readFileSync(`${process.env.RUNNER_TEMP}/plan.txt`, 'utf8').slice(-60000);
+            const body = `The weekly plan for \`infra/${root}\` found changes.\n\n\`\`\`\n${plan}\n\`\`\``;
+            const { owner, repo } = context.repo;
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open' });
+            const existing = issues.find((i) => i.title === title);
+            if (existing) {
+              await github.rest.issues.update({ owner, repo, issue_number: existing.number, body });
+            } else {
+              await github.rest.issues.create({ owner, repo, title, body });
+            }

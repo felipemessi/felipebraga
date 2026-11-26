@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    # Branch for feature work, as in the git flow: PRs go to develop.
+    target-branch: develop
+
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/setup
+    schedule:
+      interval: weekly
+    target-branch: develop
+
+  - package-ecosystem: terraform
+    directories:
+      - /infra/bootstrap
+      - /infra/cloudflare
+      - /infra/github
+    schedule:
+      interval: weekly
+    target-branch: develop
