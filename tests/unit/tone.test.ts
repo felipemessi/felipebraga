@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TONE, isTone, TONES } from '../../src/lib/tone';
+import { DEFAULT_TONE, isTone, TONES, toneVars } from '../../src/lib/tone';
 
 describe('tone', () => {
   it('AC3: lists exactly the tones declared in tokens.css', () => {
@@ -19,5 +19,13 @@ describe('tone', () => {
     expect(isTone('ceu')).toBe(true);
     expect(isTone('azul')).toBe(false);
     expect(isTone(undefined)).toBe(false);
+  });
+});
+
+describe('toneVars', () => {
+  it('maps a tone to its accent and pastel fill', () => {
+    expect(toneVars('ceu')).toBe(
+      '--accent: var(--accent-ceu); --post-bg: var(--bg-ceu)',
+    );
   });
 });

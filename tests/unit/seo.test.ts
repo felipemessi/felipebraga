@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   absoluteUrl,
+  articleJsonLd,
+  articleMeta,
+  blogPostingNode,
   buildSeo,
   buildTitle,
   personJsonLd,
@@ -82,5 +85,86 @@ describe('seo', () => {
     expect(data['image']).toBe(`${site}/a.jpg`);
     expect(data['sameAs']).toHaveLength(2);
     expect(json).not.toContain('<');
+  });
+});
+
+describe('AC16: article SEO', () => {
+  const published = new Date('2026-11-12T12:00:00Z');
+  const modified = new Date('2026-11-18T12:00:00Z');
+
+  it('adds article meta with one article:tag per tag', () => {
+    const seo = buildSeo({
+      path: '/blog/x',
+      site,
+      type: 'article',
+      article: {
+        publishedTime: published,
+        modifiedTime: modified,
+        tags: ['Plataforma', 'helm'],
+      },
+    });
+    expect(seo.articleMeta).toEqual([
+      { property: 'article:published_time', content: published.toISOString() },
+      { property: 'article:modified_time', content: modified.toISOString() },
+      { property: 'article:tag', content: 'Plataforma' },
+      { property: 'article:tag', content: 'helm' },
+    ]);
+  });
+
+  it('omits modified_time without updatedDate and article meta outside articles', () => {
+    expect(
+      articleMeta({ publishedTime: published, tags: [] }).map(
+        (tag) => tag.property,
+      ),
+    ).toEqual(['article:published_time']);
+    expect(articleMeta(undefined)).toEqual([]);
+  });
+
+  const input = {
+    site,
+    url: `${site}/blog/x`,
+    title: 'Helm',
+    description: 'Descrição',
+    publishedTime: published,
+    authorImage: '/avatar.jpg',
+  };
+
+  it('builds one @graph with BlogPosting and BreadcrumbList', () => {
+    const data = JSON.parse(
+      articleJsonLd({ ...input, modifiedTime: modified, image: '/capa.jpg' }),
+    ) as { '@context': string; '@graph': Record<string, unknown>[] };
+    expect(data['@context']).toBe('https://schema.org');
+    const [post, crumbs] = data['@graph'];
+    expect(post).toMatchObject({
+      '@type': 'BlogPosting',
+      headline: 'Helm',
+      description: 'Descrição',
+      datePublished: published.toISOString(),
+      dateModified: modified.toISOString(),
+      image: `${site}/capa.jpg`,
+      inLanguage: 'pt-BR',
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `${site}/blog/x` },
+      author: { '@type': 'Person', name: 'Felipe Braga', url: site },
+    });
+    expect(crumbs).toMatchObject({
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { position: 1, name: 'Início', item: site },
+        { position: 2, name: 'Artigos', item: `${site}/blog` },
+        { position: 3, name: 'Helm', item: `${site}/blog/x` },
+      ],
+    });
+  });
+
+  it('falls back to publishDate for dateModified and omits a missing image', () => {
+    const node = blogPostingNode(input);
+    expect(node.dateModified).toBe(published.toISOString());
+    expect('image' in node).toBe(false);
+  });
+
+  it('cannot close the script element', () => {
+    expect(articleJsonLd({ ...input, title: '</script><b>' })).not.toContain(
+      '<',
+    );
   });
 });

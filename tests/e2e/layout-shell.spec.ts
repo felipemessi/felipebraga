@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
@@ -198,16 +198,12 @@ test('AC6: the logo is a 40px round photo with an empty alt', async ({
   expect(Math.round(box?.width ?? 0)).toBe(expected);
 });
 
-test('AC16: the home HTML, CSS and fonts stay under 150 KB with no JS files', () => {
-  const walk = (dir: string): string[] =>
-    readdirSync(dir).flatMap((name) => {
-      const path = join(dir, name);
-      return statSync(path).isDirectory() ? walk(path) : [path];
-    });
-  expect(walk('dist').filter((f) => f.endsWith('.js'))).toEqual([]);
+test('AC16/AC19: the home HTML, CSS and fonts stay under 150 KB and the home references no script', () => {
+  // JS files may exist for an article (the copy button), never for the home.
+  const html = readFileSync('dist/index.html', 'utf8');
+  expect(html).not.toMatch(/<script[^>]*\ssrc=/);
 
   // RNF2 is per page: weigh the home plus the CSS and fonts it references.
-  const html = readFileSync('dist/index.html', 'utf8');
   const refs = (text: string): string[] =>
     [...text.matchAll(/\/_astro\/[\w./-]+\.(?:css|woff2)/g)].map((m) => m[0]);
   const css = refs(html).filter((p) => p.endsWith('.css'));

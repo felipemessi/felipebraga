@@ -18,3 +18,11 @@ export function isTone(value: unknown): value is Tone {
     typeof value === 'string' && (TONES as readonly string[]).includes(value)
   );
 }
+
+/**
+ * Inline custom properties that bring a post tone into a creme band: the accent
+ * for links and borders, and the pastel fill for boxes (`--post-bg`).
+ */
+export function toneVars(tone: Tone): string {
+  return `--accent: var(--accent-${tone}); --post-bg: var(--bg-${tone})`;
+}
