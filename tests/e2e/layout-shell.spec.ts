@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
@@ -85,6 +85,11 @@ test('AC4/AC5: menu is plain links on desktop and a no-JS toggle on mobile', asy
       .getByText('Abrir menu', { exact: true })
       .or(page.locator('summary[aria-label="Abrir menu"]'));
     await expect(summary.first()).toBeVisible();
+    const toggle = await page
+      .locator('summary[aria-label="Abrir menu"]')
+      .boundingBox();
+    expect(toggle?.width ?? 0).toBeGreaterThanOrEqual(44);
+    expect(toggle?.height ?? 0).toBeGreaterThanOrEqual(44);
     await page.locator('summary[aria-label="Abrir menu"]').click();
     const nav = page.getByRole('navigation', { name: 'Principal' });
     await expect(nav.getByRole('link')).toHaveText(labels);
@@ -96,6 +101,35 @@ test('AC4/AC5: menu is plain links on desktop and a no-JS toggle on mobile', asy
     const nav = page.getByRole('navigation', { name: 'Principal' });
     await expect(nav.getByRole('link')).toHaveText(labels);
     await expect(page.locator('summary')).toBeHidden();
+    for (const link of await nav.getByRole('link').all()) {
+      const box = await link.boundingBox();
+      expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+  }
+});
+
+test('AC8: with long content the footer follows it and the page scrolls', async ({
+  page,
+}) => {
+  for (const [width, height] of [
+    [390, 500],
+    [768, 500],
+    [1440, 500],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    await page.locator('main').evaluate((el) => {
+      el.style.minHeight = '2000px';
+    });
+    const main = await page.locator('main').boundingBox();
+    const footer = await page.locator('footer').boundingBox();
+    expect(footer?.y ?? 0).toBeGreaterThanOrEqual(
+      (main?.y ?? 0) + (main?.height ?? 0) - 1,
+    );
+    const scrollable = await page.evaluate(
+      () => document.documentElement.scrollHeight > window.innerHeight,
+    );
+    expect(scrollable).toBe(true);
   }
 });
 
@@ -164,17 +198,30 @@ test('AC6: the logo is a 40px round photo with an empty alt', async ({
   expect(Math.round(box?.width ?? 0)).toBe(expected);
 });
 
-test('AC16: HTML, CSS and fonts stay under 150 KB with no JS files', () => {
+test('AC16: the home HTML, CSS and fonts stay under 150 KB with no JS files', () => {
   const walk = (dir: string): string[] =>
     readdirSync(dir).flatMap((name) => {
       const path = join(dir, name);
       return statSync(path).isDirectory() ? walk(path) : [path];
     });
-  const files = walk('dist');
-  expect(files.filter((f) => f.endsWith('.js'))).toEqual([]);
-  const weight = files
-    .filter((f) => /\.(html|css|woff2)$/.test(f))
-    .reduce((sum, f) => sum + statSync(f).size, 0);
+  expect(walk('dist').filter((f) => f.endsWith('.js'))).toEqual([]);
+
+  // RNF2 is per page: weigh the home plus the CSS and fonts it references.
+  const html = readFileSync('dist/index.html', 'utf8');
+  const refs = (text: string): string[] =>
+    [...text.matchAll(/\/_astro\/[\w./-]+\.(?:css|woff2)/g)].map((m) => m[0]);
+  const css = refs(html).filter((p) => p.endsWith('.css'));
+  const resources = new Set(refs(html));
+  for (const file of css) {
+    for (const ref of refs(readFileSync(join('dist', file), 'utf8'))) {
+      resources.add(ref);
+    }
+  }
+  expect(resources.size).toBeGreaterThanOrEqual(4);
+  const weight = [...resources].reduce(
+    (sum, p) => sum + statSync(join('dist', p)).size,
+    statSync('dist/index.html').size,
+  );
   expect(weight).toBeLessThan(150 * 1024);
 });
 

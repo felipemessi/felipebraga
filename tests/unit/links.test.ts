@@ -8,6 +8,13 @@ import {
   sameAs,
 } from '../../src/lib/links';
 
+const ready = {
+  github: 'https://github.com/someone',
+  linkedin: 'https://www.linkedin.com/in/someone',
+  email: 'someone@example.com',
+};
+const pending = { ...ready, linkedin: 'https://www.linkedin.com/in/TODO' };
+
 describe('links', () => {
   it('AC13: builds mailto and sameAs from the single config', () => {
     expect(mailtoHref('a@b.c')).toBe('mailto:a@b.c');
@@ -20,31 +27,26 @@ describe('links', () => {
     expect(isLocalSite('https://example.com')).toBe(false);
   });
 
-  it('AC13: tolerates placeholders locally', () => {
+  it('AC13: lists the placeholder keys', () => {
+    expect(findPlaceholders(pending)).toEqual(['linkedin']);
+    expect(findPlaceholders(ready)).toEqual([]);
+  });
+
+  it('AC13: tolerates placeholders on a local site', () => {
     expect(() => {
-      assertLinksReady('http://localhost:4321');
+      assertLinksReady('http://localhost:4321', pending);
     }).not.toThrow();
   });
 
   it('AC13: refuses placeholders on a production URL', () => {
-    const pending = findPlaceholders();
-    if (pending.length > 0) {
-      expect(() => {
-        assertLinksReady('https://example.com');
-      }).toThrow(/Placeholder links/);
-    } else {
-      expect(() => {
-        assertLinksReady('https://example.com');
-      }).not.toThrow();
-    }
+    expect(() => {
+      assertLinksReady('https://example.com', pending);
+    }).toThrow(/Placeholder links left.*linkedin/);
   });
 
-  it('AC13: fails a production build while TODOs remain', () => {
-    const site = process.env['PUBLIC_SITE_URL'];
-    if (site !== undefined) {
-      expect(() => {
-        assertLinksReady(site);
-      }).not.toThrow();
-    }
+  it('AC13: accepts real links on a production URL', () => {
+    expect(() => {
+      assertLinksReady('https://example.com', ready);
+    }).not.toThrow();
   });
 });

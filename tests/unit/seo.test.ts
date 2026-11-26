@@ -17,6 +17,22 @@ describe('seo', () => {
     expect(absoluteUrl(site, '/blog/x.html')).toBe(`${site}/blog/x`);
   });
 
+  it('AC10: keeps absolute URLs untouched', () => {
+    expect(absoluteUrl(site, 'https://cdn.example.net/a.png')).toBe(
+      'https://cdn.example.net/a.png',
+    );
+  });
+
+  it('AC9: a canonical override replaces the page path', () => {
+    const seo = buildSeo({
+      path: '/blog/x',
+      site,
+      canonical: 'https://origin.example.org/post',
+    });
+    expect(seo.canonical).toBe('https://origin.example.org/post');
+    expect(seo.openGraph['og:url']).toBe('https://origin.example.org/post');
+  });
+
   it('AC10: titles carry the site name', () => {
     expect(buildTitle()).toBe('Felipe Braga');
     expect(buildTitle('')).toBe('Felipe Braga');

@@ -51,9 +51,28 @@ describe('layout shell config', () => {
 
   it('AC12: reads the site origin from PUBLIC_SITE_URL with a local fallback', () => {
     const config = read('astro.config.ts');
-    expect(config).toContain('PUBLIC_SITE_URL');
-    expect(config).toContain('http://localhost:4321');
+    expect(config).toContain("process.env['PUBLIC_SITE_URL']");
+    expect(config).toContain('resolveSiteUrl(');
+    expect(read('src/lib/site-url.ts')).toContain('http://localhost:4321');
     expect(read('.env.example')).toMatch(/^PUBLIC_SITE_URL=/m);
+  });
+
+  it('AC12: loads .env itself, because Astro reads the config before it', () => {
+    const config = read('astro.config.ts');
+    expect(config).toContain('loadEnvFile');
+    expect(config).toContain("'.env.local'");
+  });
+
+  it('AC13: the build refuses placeholder links on a production URL', () => {
+    const config = read('astro.config.ts');
+    expect(config).toContain('assertLinksReady(site)');
+  });
+
+  it('AC9: pages get the opening band from Base, not from their own markup', () => {
+    for (const path of walk('src/pages')) {
+      expect(read(path), path).not.toContain('<Band');
+    }
+    expect(read('src/layouts/Base.astro')).toContain('<Band {tone}>');
   });
 
   it('AC13: only links.ts holds the outbound profile URLs', () => {
