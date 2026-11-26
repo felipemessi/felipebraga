@@ -1,0 +1,18 @@
+# Cloudflare merges every matching rule, so "/*" must not set Cache-Control:
+# HTML, rss.xml and sitemap*.xml rely on the platform default
+# (public, max-age=0, must-revalidate), which is the value the TRD asks for.
+
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/pagefind/*
+  Cache-Control: public, max-age=3600
