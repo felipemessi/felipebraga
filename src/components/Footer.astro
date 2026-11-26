@@ -1,0 +1,102 @@
+---
+import { LINKS, mailtoHref } from '../lib/links';
+import { SITE } from '../lib/site';
+
+const year = new Date().getFullYear();
+
+const items = [
+  { label: 'RSS', href: LINKS.rss },
+  { label: 'GitHub', href: LINKS.github },
+  { label: 'LinkedIn', href: LINKS.linkedin },
+  { label: 'E-mail', href: mailtoHref(LINKS.email) },
+];
+---
+
+<footer data-tone="creme">
+  <div class="container top">
+    <div>
+      <p class="name">{SITE.name}</p>
+      <p class="tagline">{SITE.tagline}</p>
+    </div>
+    <nav aria-label="Rodapé">
+      {items.map((item) => (
+        <a href={item.href}>{item.label}</a>
+      ))}
+    </nav>
+  </div>
+  <p class="container note">© {year} · Astro + MDX · sem rastreadores</p>
+</footer>
+
+<style>
+  footer {
+    padding: 40px 0 2rem;
+  }
+
+  .top {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .name {
+    font-family: var(--font-display);
+    font-size: 1.625rem;
+    font-weight: 500;
+    font-variation-settings:
+      'SOFT' 60,
+      'WONK' 1;
+  }
+
+  .tagline {
+    margin-top: var(--space-2);
+    font-size: var(--text-small);
+    color: var(--text-muted);
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+  }
+
+  nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: var(--text-small);
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .note {
+    margin-top: 20px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  @media (min-width: 768px) {
+    footer {
+      padding-top: 72px;
+    }
+
+    .top {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: var(--space-8);
+    }
+
+    .name {
+      font-size: 2rem;
+    }
+
+    nav {
+      gap: var(--space-6);
+    }
+
+    .note {
+      margin-top: 40px;
+    }
+  }
+</style>

@@ -1,17 +1,27 @@
 ---
+import avatar from '../assets/felipe-avatar.jpg';
+import Band from '../components/Band.astro';
+import Base from '../layouts/Base.astro';
+import { personJsonLd } from '../lib/seo';
 import { SITE } from '../lib/site';
+
+const jsonLd = personJsonLd(
+  Astro.site?.origin ?? 'http://localhost:4321',
+  avatar.src,
+);
 ---
 
-<html lang={SITE.locale}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{SITE.name}</title>
-  </head>
-  <body>
-    <main>
-      <h1>{SITE.name}</h1>
-      <p>{SITE.tagline}</p>
-    </main>
-  </body>
-</html>
+<Base description={SITE.tagline} {jsonLd}>
+  <Band tone="creme">
+    <h1>{SITE.name}</h1>
+    <p class="tagline">{SITE.tagline}</p>
+  </Band>
+</Base>
+
+<style>
+  .tagline {
+    margin-top: var(--space-6);
+    max-width: var(--measure);
+    font-size: var(--text-lead);
+  }
+</style>

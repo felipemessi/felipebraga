@@ -1,0 +1,28 @@
+---
+import { buildSeo, type SeoInput } from '../lib/seo';
+
+interface Props extends Omit<SeoInput, 'site'> {
+  jsonLd?: string | undefined;
+}
+
+const { jsonLd, ...input } = Astro.props;
+const seo = buildSeo({
+  ...input,
+  site: Astro.site?.origin ?? 'http://localhost:4321',
+});
+---
+
+<title>{seo.title}</title>
+<meta name="description" content={seo.description} />
+<link rel="canonical" href={seo.canonical} />
+{seo.robots !== null && <meta name="robots" content={seo.robots} />}
+{Object.entries(seo.openGraph).map(([property, content]) => (
+  <meta property={property} content={content} />
+))}
+<meta name="twitter:card" content={seo.twitterCard} />
+{seo.alternates.map((alt) => (
+  <link rel="alternate" type={alt.type} title={alt.title} href={alt.href} />
+))}
+{jsonLd !== undefined && (
+  <script type="application/ld+json" set:html={jsonLd} />
+)}

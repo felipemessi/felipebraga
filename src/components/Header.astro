@@ -1,0 +1,156 @@
+---
+import { Image } from 'astro:assets';
+import avatar from '../assets/felipe-avatar.jpg';
+import { SITE } from '../lib/site';
+import { DEFAULT_TONE, type Tone } from '../lib/tone';
+
+interface Props {
+  tone?: Tone;
+}
+
+const { tone = DEFAULT_TONE } = Astro.props;
+
+const items = [
+  { label: 'Artigos', href: '/blog' },
+  { label: 'Temas', href: '/tags' },
+  { label: 'Me contrate', href: '/me-contrate' },
+];
+---
+
+<div data-tone={tone}>
+  <header class="container">
+    <a class="logo" href="/">
+      <Image src={avatar} alt="" width={40} height={40} class="avatar" />
+      <span class="name">{SITE.name}</span>
+    </a>
+
+    <nav class="desktop" aria-label="Principal">
+      {items.map((item) => (
+        <a href={item.href}>{item.label}</a>
+      ))}
+    </nav>
+
+    <details class="mobile">
+      <summary aria-label="Abrir menu">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+        >
+          <path d="M4 8h16M4 16h16"></path>
+        </svg>
+      </summary>
+      <nav aria-label="Principal">
+        {items.map((item) => (
+          <a href={item.href}>{item.label}</a>
+        ))}
+      </nav>
+    </details>
+  </header>
+</div>
+
+<style>
+  header {
+    position: relative;
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    text-decoration: none;
+  }
+
+  .logo :global(.avatar) {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: var(--radius-pill);
+    object-fit: cover;
+    border: 1px solid rgba(31, 35, 40, 0.18);
+  }
+
+  .name {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 500;
+  }
+
+  nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: var(--text-small);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  nav a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 6px;
+  }
+
+  .desktop {
+    display: none;
+  }
+
+  .mobile summary {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+  }
+
+  .mobile summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .mobile nav {
+    position: absolute;
+    right: 12px;
+    top: calc(var(--header-h) - 4px);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    padding: var(--space-2);
+    background: var(--bg);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-md);
+  }
+
+  @media (min-width: 768px) {
+    .logo :global(.avatar) {
+      width: 40px;
+      height: 40px;
+    }
+
+    .name {
+      font-size: 1.25rem;
+    }
+
+    .desktop {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .mobile {
+      display: none;
+    }
+  }
+</style>
