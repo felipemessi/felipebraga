@@ -75,10 +75,10 @@ describe('infra and deploy: _headers', () => {
     expect(rules.get('/*')?.has('cache-control')).toBe(false);
   });
 
-  it('AC3: caches hashed assets and fonts as immutable for a year', () => {
+  it('AC3: caches hashed assets, including the fonts under /_astro/fonts/, as immutable for a year', () => {
     const immutable = ['public, max-age=31536000, immutable'];
     expect(rules.get('/_astro/*')?.get('cache-control')).toEqual(immutable);
-    expect(rules.get('/fonts/*')?.get('cache-control')).toEqual(immutable);
+    expect(rules.has('/fonts/*')).toBe(false);
   });
 
   it('AC3: caches the search index for an hour', () => {
