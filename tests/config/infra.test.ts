@@ -104,10 +104,44 @@ describe('infra and deploy: lighthouse budgets', () => {
   const rc = JSON.parse(read('lighthouserc.json')) as {
     ci: {
       collect: { staticDistDir: string };
-      assert: { assertions: Record<string, [string, Record<string, number>]> };
+      assert: {
+        assertMatrix: {
+          matchingUrlPattern: string;
+          assertions: Record<string, [string, Record<string, number>]>;
+        }[];
+      };
     };
   };
-  const a = rc.ci.assert.assertions;
+  const [pages, articles] = rc.ci.assert.assertMatrix;
+  // Every assertion below is about the home and other pages; articles are checked
+  // in their own test.
+  const a = pages?.assertions ?? {};
+
+  it('1.4: articles get a 2 s LCP budget and every other assertion is the same', () => {
+    const home = 'http://localhost:1234/index.html';
+    const post = 'http://localhost:1234/blog/artigo-completo.html';
+    const matches = (pattern: string | undefined, url: string) =>
+      new RegExp(pattern ?? '$^').test(url);
+    expect(matches(pages?.matchingUrlPattern, home)).toBe(true);
+    expect(matches(pages?.matchingUrlPattern, post)).toBe(false);
+    expect(matches(articles?.matchingUrlPattern, post)).toBe(true);
+    expect(matches(articles?.matchingUrlPattern, home)).toBe(false);
+    expect(articles?.assertions['largest-contentful-paint']).toEqual([
+      'error',
+      { maxNumericValue: 2000 },
+    ]);
+    const withoutLcp = (
+      assertions: Record<string, [string, Record<string, number>]>,
+    ) =>
+      Object.fromEntries(
+        Object.entries(assertions).filter(
+          ([name]) => name !== 'largest-contentful-paint',
+        ),
+      );
+    const restHome = withoutLcp(a);
+    const restPost = withoutLcp(articles?.assertions ?? {});
+    expect(restPost).toEqual(restHome);
+  });
 
   it('AC6: runs against the built dist/', () => {
     expect(rc.ci.collect.staticDistDir).toBe('./dist');
