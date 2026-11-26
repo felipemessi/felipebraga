@@ -50,6 +50,7 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 ## Open items
 - **Domain:** undecided (PRD open question). It blocks the production DNS in 1.6 and the canonical URLs and sitemap in 2.8.
 - **Hire me route:** the TRD does not name it. The design uses `/me-contrate`; confirm it in the 2.5 spec.
-- **Assumed specs:** none (the only spec so far, [project-scaffold](../specs/project-scaffold.md), is `In Progress`, not `Assumed`).
+- **CMS datetime (3.1):** `publishDate` must be saved as ISO 8601 with an offset; the Sveltia datetime widget has to be configured for it, since the schema cannot check the zone.
+- **Assumed specs:** none (the specs so far, [project-scaffold](../specs/project-scaffold.md) and [content-schema](../specs/content-schema.md), are `Accepted`, not `Assumed`).
 
 Resolved on 2026-11-25: the stack (Astro 7, Node 26 LTS), routes (`/blog/<slug>`, `/tags/<tag>`, `/series/<serie>`), taxonomy (tags + `sectionColor`) and frontmatter names follow the TRD. `design/AGENTS.md` was updated to match.
