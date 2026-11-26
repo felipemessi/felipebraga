@@ -528,6 +528,17 @@ describe('infra and deploy: terraform roots', () => {
     expect(imports).toMatch(/id\s*=\s*"[0-9a-f]{32}"/);
   });
 
+  it('AC9: redirects http to https on the zone, only while a domain is set', () => {
+    const setting =
+      /resource "cloudflare_zone_setting" "always_use_https" \{[\s\S]*?\n\}/.exec(
+        read('infra/cloudflare/main.tf'),
+      )?.[0] ?? '';
+    expect(setting).not.toBe('');
+    expect(setting).toMatch(/count\s+= local\.has_domain \? 1 : 0/);
+    expect(setting).toContain('setting_id = "always_use_https"');
+    expect(setting).toMatch(/value\s+= "on"/);
+  });
+
   it('AC9: refuses to delete the zone when the domain is switched off', () => {
     const zone =
       /resource "cloudflare_zone" "site" \{[\s\S]*?\n\}/.exec(
