@@ -8,11 +8,11 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 | # | Feature | Status | Spec | Notes |
 | --- | --- | --- | --- | --- |
 | 1.1 | Project scaffold (Astro 7, Node 26 LTS, pnpm with `packageManager` pinned, strict TS, lint, Vitest, Playwright + axe, `.gitignore`, `LICENSE`, `BRAND.md`) | Built | [spec](../specs/project-scaffold.md) | Pin TypeScript 6.0.x: `astro check` refuses TS 7 and `typescript-eslint` needs <6.1. Set `engines.node` >=26 to match `.nvmrc`. Run `audit` right after |
-| 1.2 | Content schema (`posts`, `tags`, `series`, `pages` collections, Zod rules, `isPublished`, test fixtures) | Planned | — | RN1, RN2, RNF5. Fields as in the TRD |
-| 1.3 | Layout shell (tokens, fonts, Band/Header/Footer, base layout, `<SEO>` head) | Planned | — | Design step 1. Header tone matches the opening band |
+| 1.2 | Content schema (`posts`, `tags`, `series`, `pages` collections, Zod rules, `isPublished`, test fixtures) | Built | [spec](../specs/content-schema.md) | RN1, RN2, RNF5. Fields as in the TRD |
+| 1.3 | Layout shell (tokens, fonts, Band/Header/Footer, base layout, `<SEO>` head) | Built | [spec](../specs/layout-shell.md) | Design step 1. Header tone matches the opening band |
 | 1.4 | Article page (MDX components: CodeBlock/Shiki, Callout, Figure, Tldr, Table, Footnotes, anchored headings, Toc, reading time) | Planned | — | Design step 2, the most important screen. Mermaid rendered at build time |
-| 1.5 | CI pipeline (`ci.yml`: lint, `astro check`, Vitest coverage, build, link check, Playwright, SonarQube gate) | Planned | — | RN13. Content-only changes skip e2e and Sonar |
-| 1.6 | Infra + deploy (Terraform bootstrap/cloudflare/github, `wrangler.jsonc`, cache/security headers, `deploy.yml`, preview env, Lighthouse CI budgets) | Built | [spec](../specs/infra-deploy.md) | RNF1–RNF4, RNF7–RNF9. Production domain is undecided: the spec ships on `workers.dev` with the custom domain behind a Terraform variable. Depends on 1.5 for the link check and status check names |
+| 1.5 | CI pipeline (`ci.yml`: lint, `astro check`, Vitest coverage, build, link check, Playwright, SonarQube gate) | Built | [spec](../specs/ci-pipeline.md) | RN13. Content-only changes skip e2e and Sonar |
+| 1.6 | Infra + deploy (Terraform bootstrap/cloudflare/github, `wrangler.jsonc`, cache/security headers, `deploy.yml`, preview env, Lighthouse CI budgets) | Built | [spec](../specs/infra-deploy.md) | RNF1–RNF4, RNF7–RNF9. Production domain is undecided: the spec ships on `workers.dev` with the custom domain behind a Terraform variable. Needs the link check and status check names from 1.5 wired in (see the spec) |
 
 ## Milestone 2 — Read and discover
 | # | Feature | Status | Spec | Notes |
@@ -50,6 +50,9 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 ## Open items
 - **Domain:** undecided (PRD open question). It blocks the production DNS in 1.6 and the canonical URLs and sitemap in 2.8.
 - **Hire me route:** the TRD does not name it. The design uses `/me-contrate`; confirm it in the 2.5 spec.
-- **Assumed specs:** none (the only spec so far, [project-scaffold](../specs/project-scaffold.md), is `In Progress`, not `Assumed`).
+- **CMS datetime (3.1):** `publishDate` must be saved as an ISO datetime with an offset and seconds (or an ISO date); the Sveltia datetime widget has to be configured for it, since the schema rejects anything looser.
+- **Assumed specs:** none (the specs so far, [project-scaffold](../specs/project-scaffold.md), [content-schema](../specs/content-schema.md) and [layout-shell](../specs/layout-shell.md), are `Accepted`, not `Assumed`).
+- **Placeholder links:** GitHub, LinkedIn and e-mail in `src/lib/links.ts` are `TODO`. Fill them before the production build in 1.6; the build fails until then.
+- **Feed endpoints:** `/rss.xml` and `/feed.json` are linked from the head and footer since 1.3. Create them (or expect the 1.5 link checker to flag them) in the feature that adds feeds.
 
 Resolved on 2026-11-25: the stack (Astro 7, Node 26 LTS), routes (`/blog/<slug>`, `/tags/<tag>`, `/series/<serie>`), taxonomy (tags + `sectionColor`) and frontmatter names follow the TRD. `design/AGENTS.md` was updated to match.
