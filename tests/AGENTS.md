@@ -6,5 +6,6 @@
 - Every page test checks `lang="pt-BR"`, a single `h1`, and zero `serious` or `critical` axe violations.
 - Name tests after the acceptance criterion they prove (`AC6: ...`).
 - `fixtures/invalid/<case>/` are complete content dirs, not loaded by default. A new one must fail for its own rule: check the error message, because a YAML mistake in the fixture also fails the build and hides the real result.
+- `e2e/article.spec.ts` also writes screenshots at 390, 768 and 1440 to `test-results/article/` for `check verify`.
 - E2E tests run on `fixtures/content`, never on real posts. A new post must never break a test.
 - Test names and comments are in English. Assertions on site copy stay in Portuguese.

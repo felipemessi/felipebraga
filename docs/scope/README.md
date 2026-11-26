@@ -53,6 +53,7 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 - **Hire me route:** the TRD does not name it. The design uses `/me-contrate`; confirm it in the 2.5 spec.
 - **CMS datetime (3.1):** `publishDate` must be saved as an ISO datetime with an offset and seconds (or an ISO date); the Sveltia datetime widget has to be configured for it, since the schema rejects anything looser.
 - **Assumed specs:** none (the specs so far, [project-scaffold](../specs/project-scaffold.md), [content-schema](../specs/content-schema.md), [layout-shell](../specs/layout-shell.md), [ci-pipeline](../specs/ci-pipeline.md) and [infra-deploy](../specs/infra-deploy.md), are `Accepted`, not `Assumed`).
+- **1.4 follow-ups:** run `pnpm lighthouse` on the article (it crawls every HTML file, so an article meets the home's 12 KB document and 14 KB CSS budgets); confirm the CI Chromium step and the build time under 3 min with a warm cache (RNF7); indented code blocks get the frame but not the copy script; the `updatedDate` git fallback stays in 2.8.
 - **Feed endpoints:** `/rss.xml` and `/feed.json` are linked from the head and footer since 1.3. Create them (or expect the 1.5 link checker to flag them) in the feature that adds feeds.
 
 Resolved on 2026-11-25: the stack (Astro 7, Node 26 LTS), routes (`/blog/<slug>`, `/tags/<tag>`, `/series/<serie>`), taxonomy (tags + `sectionColor`) and frontmatter names follow the TRD. `design/AGENTS.md` was updated to match.
