@@ -4,7 +4,7 @@ import { findBrokenReferences } from '../../src/lib/content/references';
 const tags = new Set(['devops', 'ia']);
 const series = new Set(['agentes']);
 
-describe('findBrokenReferences', () => {
+describe('AC6: findBrokenReferences', () => {
   it('returns nothing when every reference exists', () => {
     expect(
       findBrokenReferences(

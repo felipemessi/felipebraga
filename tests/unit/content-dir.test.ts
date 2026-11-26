@@ -4,7 +4,7 @@ import {
   resolveContentDir,
 } from '../../src/lib/content/dir';
 
-describe('resolveContentDir', () => {
+describe('AC10: resolveContentDir', () => {
   it('defaults to src/content', () => {
     expect(resolveContentDir({})).toBe(DEFAULT_CONTENT_DIR);
     expect(DEFAULT_CONTENT_DIR).toBe('src/content');

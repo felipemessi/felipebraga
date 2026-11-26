@@ -1,5 +1,5 @@
 # Content schema
-Status: In Progress
+Status: Accepted
 Scope: 1.2
 
 ## Requirements

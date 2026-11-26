@@ -25,7 +25,7 @@ function issuePaths(input: unknown): string[] {
   return result.success ? [] : result.error.issues.map((i) => i.path.join('.'));
 }
 
-describe('postSchema', () => {
+describe('AC2-AC5: postSchema', () => {
   it('accepts the minimal valid post and applies defaults', () => {
     const result = post.parse(valid);
     expect(result.draft).toBe(false);
@@ -33,6 +33,16 @@ describe('postSchema', () => {
     expect(result.tags).toEqual([{ collection: 'tags', id: 'devops' }]);
     expect(result.series).toBeUndefined();
     expect(result.cover).toBeUndefined();
+  });
+
+  it('keeps the instant when publishDate carries a timezone offset', () => {
+    const a = post.parse(valid).publishDate;
+    const b = post.parse({
+      ...valid,
+      publishDate: '2026-12-01T12:00:00Z',
+    }).publishDate;
+    expect(a.toISOString()).toBe('2026-12-01T12:00:00.000Z');
+    expect(a.getTime()).toBe(b.getTime());
   });
 
   it('accepts every optional field', () => {
@@ -126,7 +136,7 @@ describe('postSchema', () => {
   });
 });
 
-describe('tagSchema and seriesSchema', () => {
+describe('AC7: tagSchema and seriesSchema', () => {
   it.each([
     ['tag', tagSchema()],
     ['series', seriesSchema()],
@@ -141,7 +151,7 @@ describe('tagSchema and seriesSchema', () => {
   });
 });
 
-describe('pageSchema', () => {
+describe('AC7: pageSchema', () => {
   const page = {
     title: 'Me contrate',
     description: 'a'.repeat(60),
