@@ -21,7 +21,7 @@ Installed today (versions in `package.json`):
 - SonarQube Cloud via the CI action (`sonar-project.properties`, `SONAR_TOKEN` secret); it does not analyze `.astro`.
 - Cloudflare Workers Static Assets, deployed with `wrangler` (pinned): `wrangler.jsonc` serves `dist/` with no Worker script, and `public/_headers` holds the cache and security headers (`/*` must not set `Cache-Control`; Cloudflare merges matching rules). `deploy.yml` deploys `main` from the `production` environment, and `preview.yml` uploads a noindex Worker version per push or PR from the `preview` environment.
 - Lighthouse CI (`@lhci/cli`, pinned) over `dist/`, budgets in `lighthouserc.json`, run by `deploy.yml`.
-- Terraform (`~> 1.10`, providers pinned, `.terraform.lock.hcl` committed) in `infra/`: `bootstrap/` (applied once, locally), `cloudflare/` and `github/` (state in R2). `infra.yml` checks, plans and applies it. Setup and the environments table are in `infra/README.md`. Local checks also need `terraform`, `tflint` and `trivy`.
+- Terraform (`~> 1.10`, providers pinned, `.terraform.lock.hcl` committed) in `infra/`: `bootstrap/` (applied once, locally), `cloudflare/` and `github/` (state in R2). `infra.yml` checks and plans on the PR, and a merge to `main` applies the saved plan with no manual approval (the merge is the approval). Production is `febraga.dev`: `cloudflare/terraform.tfvars` sets the domain and `cloudflare/import.tf` adopts the zone that already existed. Setup and the environments table are in `infra/README.md`. Local checks also need `terraform`, `tflint` and `trivy`.
 
 Not installed yet (the TRD plans them): Shiki, Sveltia CMS, Pagefind. List a tool here only once it is installed.
 
@@ -42,7 +42,7 @@ The package manager is pnpm (never npm or yarn). Node 26 doesn't ship Corepack, 
 | `pnpm test:e2e` | Builds, serves `dist/` and runs Playwright + axe |
 | `pnpm lighthouse` | Lighthouse CI budgets against `dist/` (run `pnpm build` first; needs Chrome, or `CHROME_PATH`) |
 
-Terraform, from the repo root: `terraform fmt -check -recursive infra`, then `terraform -chdir=infra/<root> init -backend=false` and `validate`, `tflint --config="$PWD/infra/.tflint.hcl" --chdir=infra/<root>` and `trivy config --severity HIGH,CRITICAL --ignorefile infra/.trivyignore infra`. Never run `terraform apply` or `wrangler deploy` by hand: they go through `infra.yml` and `deploy.yml`, except the one-time local `bootstrap/` apply in `infra/README.md`.
+Terraform, from the repo root: `terraform fmt -check -recursive infra`, then `terraform -chdir=infra/<root> init -backend=false` and `validate`, `tflint --config="$PWD/infra/.tflint.hcl" --chdir=infra/<root>` and `trivy config --severity HIGH,CRITICAL --ignorefile infra/.trivyignore infra`. Never run `terraform apply` or `wrangler deploy` by hand: they go through `infra.yml` and `deploy.yml`, except the local `bootstrap/` apply in `infra/README.md`. Locally, `export GODEBUG=tlsmlkem=0` before `terraform init` against R2, or the endpoint answers `tls: handshake failure`. `infra/bootstrap/set-secrets.sh` sets the environment secrets from the bootstrap outputs (stdin only, never `gh secret set --body -`, which stores a literal `-`).
 
 Planned in the TRD:
 - TODO: `pagefind --site dist`
@@ -89,7 +89,7 @@ Planned layout: the TRD's "Estrutura do repositório" section (`content/`, `comp
 - Pages use `Base.astro` and pass the opening band through `<Fragment slot="hero">`; `Base` gives it the same `tone` as the `Header`. Pages do not render `<Band>` for the opening band themselves.
 - RNF2 budget is per page: HTML + CSS + fonts under 150 KB with no JS files (`tests/e2e/layout-shell.spec.ts` measures the home).
 - E2E tests run on `tests/fixtures/content`, never on real posts.
-- Secrets live only in GitHub **environment** secrets (`production`, `preview`, `infra-plan`, `infra`), one Cloudflare token per job, never repository secrets and never in Terraform or its state. A job that runs project code (dependencies, build) holds none; it hands `dist/` to a job that does. Fork and Dependabot PRs get no secrets, so jobs that need them are skipped for those PRs. Workflows default to `contents: read`, pin actions by SHA and checkout with `persist-credentials: false`.
+- Secrets live only in GitHub **environment** secrets (`production`, `preview`, `infra-plan`, `infra`), one Cloudflare token per job, never repository secrets and never in a Terraform state (the local bootstrap state holds the token values: keep it private). A job that runs project code (dependencies, build) holds none; it hands `dist/` to a job that does. Fork and Dependabot PRs get no secrets, so jobs that need them are skipped for those PRs. Workflows default to `contents: read`, pin actions by SHA and checkout with `persist-credentials: false`.
 - `SHOW_DRAFTS` is the one build-time variable that is not `PUBLIC_`: only the preview build sets it, to show drafts and scheduled posts, and the production build never does. No code reads it yet (3.2).
 - Config tests in `tests/config/` scope each workflow assertion to its job. Edit them with the config they cover.
 - Git flow: `feature/*` branches off `develop` and `hotfix/*` off `main`. `main` is production. Commits follow Conventional Commits (skills `branch` and `commit`). Before creating a branch, fetch and fast-forward local `develop` to `origin/develop`.

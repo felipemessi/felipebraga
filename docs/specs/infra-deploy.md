@@ -81,7 +81,7 @@ infra/
 3. [x] Add `@lhci/cli` and `lighthouserc.json` with the budgets; prove a deliberate violation fails — AC6, AC13
 4. [x] Write `deploy.yml` (build job, then deploy job) with pinned actions, caching and concurrency — AC4, AC12, AC14
 5. [x] Write `preview.yml` with `SHOW_DRAFTS`, the noindex step and the version URL summary/comment — AC5
-6. [~] Record the `workers.dev` production URL in `README.md` and add `PUBLIC_SITE_URL` — AC15
+6. [x] Record the production URL (`https://febraga.dev`) in `README.md` and set `PUBLIC_SITE_URL` — AC15
 7. [x] Write `infra/bootstrap/` and `infra/README.md` (the owner runs the apply; check the R2 lockfile) — AC7, AC8, AC12
 8. [x] Write `infra/cloudflare/` with the provider, the account resources and the off-by-default custom-domain block — AC7, AC9
 9. [x] Write `infra/github/` with settings, environments, secrets, variables and rulesets, and import the existing repo — AC7, AC10

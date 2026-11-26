@@ -12,7 +12,7 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 | 1.3 | Layout shell (tokens, fonts, Band/Header/Footer, base layout, `<SEO>` head) | Built | [spec](../specs/layout-shell.md) | Design step 1. Header tone matches the opening band |
 | 1.4 | Article page (MDX components: CodeBlock/Shiki, Callout, Figure, Tldr, Table, Footnotes, anchored headings, Toc, reading time) | Planned | — | Design step 2, the most important screen. Mermaid rendered at build time |
 | 1.5 | CI pipeline (`ci.yml`: lint, `astro check`, Vitest coverage, build, link check, Playwright, SonarQube gate) | Built | [spec](../specs/ci-pipeline.md) | RN13. Content-only changes skip e2e and Sonar |
-| 1.6 | Infra + deploy (Terraform bootstrap/cloudflare/github, `wrangler.jsonc`, cache/security headers, `deploy.yml`, preview env, Lighthouse CI budgets) | Built | [spec](../specs/infra-deploy.md) | RNF1–RNF4, RNF7–RNF9. Production domain is undecided: the spec ships on `workers.dev` with the custom domain behind a Terraform variable. Reuses the lychee link check and requires the `ci-gate` check from 1.5. Built and verified locally; the workflows and Terraform still need the one-time setup in `infra/README.md` and a first real run |
+| 1.6 | Infra + deploy (Terraform bootstrap/cloudflare/github, `wrangler.jsonc`, cache/security headers, `deploy.yml`, preview env, Lighthouse CI budgets) | Built | [spec](../specs/infra-deploy.md) | RNF1–RNF4, RNF7–RNF9. Production is live at `febraga.dev` (first deploy and domain applied by the pipeline). Reuses the lychee link check and requires the `ci-gate` check from 1.5. Open: the bootstrap token and local state still to delete, and Always Use HTTPS (PR) |
 
 ## Milestone 2 — Read and discover
 | # | Feature | Status | Spec | Notes |
@@ -48,12 +48,11 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 | Interactive content (diagrams, 3D islands) | Por post | `client:visible` islands, added post by post |
 
 ## Open items
-- **Domain:** `febraga.dev`. It is attached by `var.domain` in `infra/cloudflare` after the first deploy (the Worker must exist first); `PUBLIC_SITE_URL` already points to it.
-- **First production deploy (1.6):** it needs the one-time setup in [infra/README.md](../../infra/README.md) (bootstrap, R2 lock check, environment secrets), `PUBLIC_SITE_URL` set to `https://febraga.dev` (`infra/github/terraform.tfvars`), and the `src/lib/links.ts` placeholders filled, because a non-local `PUBLIC_SITE_URL` fails the build while they are `TODO`. The zone permission group names were checked against the account and exist.
+- **Domain:** `febraga.dev` is live: the pipeline attached it to the Worker and `PUBLIC_SITE_URL` points to it. Still open: Always Use HTTPS (PR #23).
+- **Cleanup after the first deploy (1.6):** delete the bootstrap API token in Cloudflare and `infra/bootstrap/terraform.tfstate*` (it holds the token values), and pick the `workers.dev` account subdomain name you want (it is `felipemessibraga` today, used only by preview URLs).
 - **Hire me route:** the TRD does not name it. The design uses `/me-contrate`; confirm it in the 2.5 spec.
 - **CMS datetime (3.1):** `publishDate` must be saved as an ISO datetime with an offset and seconds (or an ISO date); the Sveltia datetime widget has to be configured for it, since the schema rejects anything looser.
 - **Assumed specs:** none (the specs so far, [project-scaffold](../specs/project-scaffold.md), [content-schema](../specs/content-schema.md), [layout-shell](../specs/layout-shell.md), [ci-pipeline](../specs/ci-pipeline.md) and [infra-deploy](../specs/infra-deploy.md), are `Accepted`, not `Assumed`).
-- **Placeholder links:** GitHub, LinkedIn and e-mail in `src/lib/links.ts` are `TODO`. Fill them before the first production deploy (1.6); the build fails until then.
 - **Feed endpoints:** `/rss.xml` and `/feed.json` are linked from the head and footer since 1.3. Create them (or expect the 1.5 link checker to flag them) in the feature that adds feeds.
 
 Resolved on 2026-11-25: the stack (Astro 7, Node 26 LTS), routes (`/blog/<slug>`, `/tags/<tag>`, `/series/<serie>`), taxonomy (tags + `sectionColor`) and frontmatter names follow the TRD. `design/AGENTS.md` was updated to match.
