@@ -24,7 +24,7 @@ Scope: 1.5
 
 ## Decision
 - **One workflow, a gate job.** GitHub's `paths-ignore` at workflow level leaves required checks "pending" forever on a skipped run, which would block content-only PRs. Skipping inside jobs plus one always-run `ci-gate` as the sole required check avoids it. Runner-up: separate workflows per path; more files and the same pending-check trap.
-- **Path filter via `dorny/paths-filter`** (SHA-pinned). Small, widely used, and handles PR and push events the same. Runner-up: a `git diff --name-only` shell step, which needs no third-party action but must handle both event shapes by hand.
+- **Path filter via `dorny/paths-filter`** (SHA-pinned) with `predicate-quantifier: some-with-excludes`. Small, widely used, and handles PR and push events the same. The default quantifier ORs the patterns, so `'**'` also matched posts; the throwaway content PR caught it. Runner-up: a `git diff --name-only` shell step, which needs no third-party action but must handle both event shapes by hand.
 - **Link check with lychee offline over `dist/`.** Checks internal links and anchors from the built artifact, which is what ships. External links are excluded: they flake and would block unrelated PRs. Runner-up: a TypeScript script in `src/lib`, testable and covered by Sonar but code to maintain.
 - **`verify` builds once; e2e builds again through Playwright's `webServer`** (`pnpm build && pnpm preview`). Simpler than sharing `dist/` between jobs; e2e needs the `PUBLIC_` env and fixtures content that the plain build does not. The cost is one extra build, small at this size.
 - **Boundary with later features.**
@@ -43,17 +43,33 @@ lychee.toml
 sonar-project.properties
 ```
 
+Found by running it on GitHub:
+- lychee 0.24 takes `include_fragments = "full"` (a string) and needs an absolute `root_dir`, so the workflow passes `--root-dir ${{ github.workspace }}/dist`.
+- The placeholder home has no links, and the lychee action fails an empty run by default, so the step sets `failIfEmpty: false`. Remove it once real pages exist, so a wrong path or an empty `dist/` is caught again.
+- Sonar rejects a CI scan while Automatic Analysis is on; it is now off. The organization `felipemessi` is confirmed (the scan ran and the gate passed).
+- `ci-gate` is a required check on `develop` and `main` (branch protection: no force-push, no deletion, not enforced for admins so the CMS content commits can bypass it). Rulesets in Terraform replace this later (1.6, 3.3).
+
 Fix made while building: `tests/unit/repo-config.test.ts` (AC12 of the scaffold) asked `git check-ignore` about bare directory names, which only matches when the directory already exists. A clean CI checkout has no `dist/` or `coverage/` when Vitest runs, so `verify` would fail. The test now checks `<dir>/x`.
 
 Job graph: `changes` → (`verify`, `e2e`*, `sonar`*) → `ci-gate`. `*` = only when `code` is true. `sonar` also needs `verify` for the coverage artifact.
 
-Sonar identifiers: project key `felipemessi_felipebraga` (from the project URL, `sonarcloud.io/project/overview?id=felipemessi_felipebraga`). The organization key is not in that URL; SonarQube Cloud keys follow `<organization>_<repo>`, so `sonar.organization=felipemessi` is assumed and must be confirmed on the first run. `SONAR_TOKEN` is already in GitHub Secrets.
+Sonar: project key `felipemessi_felipebraga`, organization `felipemessi`, `SONAR_TOKEN` in GitHub Secrets.
 
-Manual steps for the author (cannot be done from the repo):
-1. Turn off Sonar's automatic analysis for the project (TRD: CI analysis, to send lcov).
-2. After the first green run, mark `ci-gate` as the required check on `develop` and `main`.
+The manual steps (automatic analysis off, `ci-gate` required) are done.
 
 Data/routes: none.
+
+## Verification (AC9, PR #3 and throwaway PRs, 2026-11-26)
+| Case | Failing step | `e2e` | `sonar` | `ci-gate` |
+| --- | --- | --- | --- | --- |
+| lint error | `pnpm lint` | ran | skipped | red |
+| type error | `pnpm check` | ran | skipped | red |
+| coverage below 80% | `pnpm test:coverage` | ran | skipped | red |
+| broken internal link | lychee | ran | skipped | red |
+| second `h1` | e2e (`verify` green) | red | ran | red |
+| only `src/content/posts/**` | none | skipped | skipped | green |
+| only `.github/**` | none | ran | ran | green |
+| the PR itself | none | ran | ran | green |
 
 ## Build plan
 1. [x] Add `sonar-project.properties` and `lychee.toml` — AC4, AC6
@@ -63,7 +79,7 @@ Data/routes: none.
 5. [x] Add `sonar` with coverage artifact handoff and quality gate wait — AC6
 6. [x] Add `ci-gate` — AC7
 7. [x] Add `.github/dependabot.yml` — AC8
-8. [ ] Validate on a throwaway PR: one failure per stage, plus a content-only PR — AC9 (needs GitHub; lychee has not run locally either)
+8. [x] Validate on throwaway PRs: one failure per stage, plus a content-only and a dotfile-only PR — AC9 (all closed without merge)
 9. [x] Update `AGENTS.md` (Stack, Structure) — AC10
 
 ## Alternatives
