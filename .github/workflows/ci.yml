@@ -106,9 +106,12 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # SonarQube Cloud's plan only serves quality gate data for pull requests and the
+  # main branch, so a push to develop would fail on "not allowed to access data from
+  # non main branches". The change was already analysed in its pull request.
   sonar:
     needs: [changes, verify]
-    if: needs.changes.outputs.code == 'true'
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
