@@ -1,5 +1,5 @@
 # Layout shell
-Status: In Progress
+Status: Accepted
 Scope: 1.3
 
 ## Requirements

@@ -1,3 +1,5 @@
+import { readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
@@ -143,6 +145,37 @@ test('AC4: header and the opening band share the same tone', async ({
     .locator('header')
     .evaluate((el) => getComputedStyle(el).borderBottomWidth);
   expect(border).toBe('0px');
+});
+
+test('AC6: the logo is a 40px round photo with an empty alt', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/');
+  const avatar = page.locator('header img');
+  await expect(avatar).toHaveAttribute('alt', '');
+  await expect(avatar).toHaveAttribute('width', '40');
+  await expect(avatar).toHaveAttribute('height', '40');
+  const radius = await avatar.evaluate(
+    (el) => getComputedStyle(el).borderRadius,
+  );
+  expect(radius).toBe('999px');
+  const box = await avatar.boundingBox();
+  const expected = testInfo.project.name === 'webkit-mobile' ? 36 : 40;
+  expect(Math.round(box?.width ?? 0)).toBe(expected);
+});
+
+test('AC16: HTML, CSS and fonts stay under 150 KB with no JS files', () => {
+  const walk = (dir: string): string[] =>
+    readdirSync(dir).flatMap((name) => {
+      const path = join(dir, name);
+      return statSync(path).isDirectory() ? walk(path) : [path];
+    });
+  const files = walk('dist');
+  expect(files.filter((f) => f.endsWith('.js'))).toEqual([]);
+  const weight = files
+    .filter((f) => /\.(html|css|woff2)$/.test(f))
+    .reduce((sum, f) => sum + statSync(f).size, 0);
+  expect(weight).toBeLessThan(150 * 1024);
 });
 
 test('AC15: the shell has no serious axe violations, menu open or closed', async ({
