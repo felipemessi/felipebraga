@@ -135,9 +135,9 @@ describe('infra and deploy: lighthouse budgets', () => {
     expect(a['total-blocking-time']?.[1]).toEqual({ maxNumericValue: 200 });
   });
 
-  it('AC6: allows no script and at most 150 KB of document, CSS and fonts', () => {
+  it('AC6/AC19: allows at most 2 KB of script (the copy button) and 150 KB of document, CSS and fonts', () => {
     expect(a['resource-summary:script:size']?.[1]).toEqual({
-      maxNumericValue: 0,
+      maxNumericValue: 2048,
     });
     const keys = [
       'resource-summary:document:size',

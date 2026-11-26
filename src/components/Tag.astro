@@ -1,0 +1,46 @@
+---
+interface Props {
+  href: string;
+  /** The first tag has the solid accent border. */
+  primary?: boolean;
+}
+
+const { href, primary = false } = Astro.props;
+---
+
+<a {href} class:list={['tag', { primary }]}>
+  <slot />
+</a>
+
+<style>
+  .tag {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 6px 14px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: var(--radius-pill);
+    color: var(--accent);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  /* The pill stays compact; the hit area reaches 44px. */
+  .tag::after {
+    position: absolute;
+    inset: -6px 0;
+    content: '';
+  }
+
+  .primary {
+    border-color: var(--accent);
+  }
+
+  @media (min-width: 768px) {
+    .tag {
+      font-size: 0.875rem;
+    }
+  }
+</style>

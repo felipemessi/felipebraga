@@ -1,0 +1,174 @@
+/* Code frame: the figure, header, copy button and highlighted lines. The token
+   colors are inline from the Shiki theme. The line numbers are a CSS counter, so
+   they are never selected or copied. */
+.prose .code {
+  margin: var(--space-6) 0 var(--space-8);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  height: 48px;
+  padding: 0 var(--space-2) 0 20px;
+  border-bottom: 1px solid rgba(31, 35, 40, 0.12);
+}
+
+.code-title {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+}
+
+.code-lang {
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-creme);
+}
+
+.code-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  font: 500 0.8125rem var(--font-sans);
+  cursor: pointer;
+}
+
+.code-copy[hidden] {
+  display: none;
+}
+
+.code-copy-label {
+  display: none;
+}
+
+.code-copy[data-copied] .code-copy-label {
+  display: inline;
+}
+
+.prose .code pre {
+  margin: 0;
+  padding: 14px 0;
+  overflow-x: auto;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  tab-size: 2;
+}
+
+.prose .code pre code {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+  counter-reset: line;
+}
+
+.prose .code .line {
+  display: inline-block;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.prose .code .line.highlighted {
+  padding-left: 17px;
+  background: var(--post-bg);
+  border-left: 3px solid var(--accent);
+}
+
+/* Mermaid and other figures that are not code share the frame look. */
+.prose .diagram {
+  margin: var(--space-8) 0;
+}
+
+.prose .diagram svg {
+  max-width: 100%;
+  height: auto;
+  padding: var(--space-4);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.prose .diagram figcaption {
+  margin-top: var(--space-3);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+@media (max-width: 767px) {
+  /* Full-bleed on phones. */
+  .prose .code {
+    margin-inline: -20px;
+    border-inline: 0;
+    border-radius: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  .prose .code pre {
+    padding: 16px 0;
+    font-size: 0.9375rem;
+  }
+
+  .code-title {
+    font-size: 0.8125rem;
+  }
+
+  .code-copy {
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid rgba(31, 35, 40, 0.16);
+  }
+
+  .code-copy-label {
+    display: inline;
+  }
+}
+
+@media (min-width: 1024px) {
+  .prose .code .line::before {
+    display: inline-block;
+    width: 2ch;
+    margin-right: 20px;
+    color: var(--accent-creme);
+    text-align: right;
+    content: counter(line);
+    counter-increment: line;
+    user-select: none;
+  }
+
+  .prose .code .line.highlighted::before {
+    margin-right: 20px;
+  }
+}

@@ -31,6 +31,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm check
       - run: pnpm test
+      - uses: ./.github/actions/chromium
       - run: pnpm build
       - name: Check internal links
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0

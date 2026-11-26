@@ -2,6 +2,7 @@ import { loadEnvFile } from 'node:process';
 import mdx from '@astrojs/mdx';
 import { defineConfig, fontProviders } from 'astro/config';
 import { assertLinksReady } from './src/lib/links';
+import { markdownConfig } from './src/lib/markdown/config';
 import { resolveSiteUrl } from './src/lib/site-url';
 
 // Astro reads the config before it loads `.env`, so load it here. Variables that
@@ -63,5 +64,13 @@ export default defineConfig({
       fallbacks: ['ui-monospace', 'monospace'],
     },
   ],
+  markdown: markdownConfig,
+  vite: {
+    build: {
+      // Keep page scripts (the copy button, AC7) as files under /_astro/; every
+      // other asset keeps Vite's default threshold.
+      assetsInlineLimit: (file) => (file.endsWith('.js') ? false : undefined),
+    },
+  },
   integrations: [mdx()],
 });
