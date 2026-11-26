@@ -66,8 +66,8 @@ The build jobs of `deploy.yml` and `preview.yml` run the project's code and depe
 
 The production domain is `febraga.dev`. The permission group names used for the zone ("Zone Write", "DNS Write", "Workers Routes Write") were checked against the account's permission groups and exist.
 
-1. Create `febraga.dev` as a zone in Cloudflare by Terraform: with `enable_domain_permissions=true` applied in `bootstrap/` (step 2 passes it), set `domain = "febraga.dev"` in `cloudflare/` only **after the first deploy**, because the Worker domain attaches to a Worker that must already exist.
-2. If the domain is registered elsewhere, change its nameservers to the ones Cloudflare shows for the zone. If the zone already exists in Cloudflare, import it first (`terraform import`) or the apply fails.
+1. `domain = "febraga.dev"` is set in `cloudflare/terraform.tfvars`, which needs the infra token to hold the zone permissions (`enable_domain_permissions=true` in `bootstrap/`, step 2 passes it) and the Worker to be deployed already, because the Worker domain attaches to it.
+2. The zone was created in the Cloudflare dashboard, so `cloudflare/import.tf` imports it (`id` is the zone ID, not a secret) and the first apply adopts it instead of creating a second one. The plan shows `1 to import, 1 to add, 1 to change`; the change is only the account ID being marked sensitive. For a domain registered elsewhere, change its nameservers to the ones Cloudflare shows for the zone.
 3. The zone has `prevent_destroy`: setting `domain` back to `null` makes `apply` fail instead of deleting the zone.
 
 Production has `workers_dev` off in `wrangler.jsonc`. Keep the account's `workers.dev` subdomain enabled (step 1), because preview URLs still use it.
