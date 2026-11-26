@@ -2,6 +2,8 @@
 Status: Accepted
 Scope: 1.3
 
+> ⚠️ Possibly stale: after the review fixes the placeholder guard also runs in `astro.config.ts` (AC13 only mentions a unit test), `PUBLIC_SITE_URL` resolving lives in `src/lib/site-url.ts` and is read from `.env` too (AC12, Design tree), and `Base` renders the opening band from a `hero` slot (AC9). Suggest `architect` to fold this in.
+
 ## Requirements
 - Design rules 1–4, 7, 8, 10, 11 (`design/AGENTS.md`): full-width tone bands, header takes the opening band's tone with no bottom border, text always `--text` with `--accent` on links/focus, no gradients or shadows, sticky footer with exactly `2rem` of final space, logo = round photo + "Felipe Braga" in Fraunces, WCAG AA, visible focus, touch targets ≥ 44px, zero JS by default.
 - TRD "Stack": Astro Fonts API, self-hosted WOFF2, latin subset, `preload` only for weights used above the fold, `font-display: swap` with an adjusted fallback to avoid CLS. CSS in custom properties, critical CSS inlined by Astro, no UI framework.

@@ -50,6 +50,8 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 ## Open items
 - **Domain:** undecided (PRD open question). It blocks the production DNS in 1.6 and the canonical URLs and sitemap in 2.8.
 - **Hire me route:** the TRD does not name it. The design uses `/me-contrate`; confirm it in the 2.5 spec.
-- **Assumed specs:** none (the only spec so far, [project-scaffold](../specs/project-scaffold.md), is `In Progress`, not `Assumed`).
+- **Assumed specs:** none (the specs so far, [project-scaffold](../specs/project-scaffold.md) and [layout-shell](../specs/layout-shell.md), are `Accepted`, not `Assumed`).
+- **Placeholder links:** GitHub, LinkedIn and e-mail in `src/lib/links.ts` are `TODO`. Fill them before the production build in 1.6; the build fails until then.
+- **Feed endpoints:** `/rss.xml` and `/feed.json` are linked from the head and footer since 1.3. Create them (or expect the 1.5 link checker to flag them) in the feature that adds feeds.
 
 Resolved on 2026-11-25: the stack (Astro 7, Node 26 LTS), routes (`/blog/<slug>`, `/tags/<tag>`, `/series/<serie>`), taxonomy (tags + `sectionColor`) and frontmatter names follow the TRD. `design/AGENTS.md` was updated to match.

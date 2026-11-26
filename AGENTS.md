@@ -15,6 +15,7 @@ Installed today (versions in `package.json`):
 - ESLint 10 (flat config, `typescript-eslint` strict type-checked, `eslint-plugin-astro`) and Prettier with `prettier-plugin-astro`.
 - Vitest with v8 coverage (`src/lib/**`, 80% minimum, `lcov` for Sonar).
 - Playwright (Chromium + WebKit mobile) with `@axe-core/playwright`, run against the built `dist/`.
+- Astro Fonts API with the Google provider: the three families (Fraunces without the `opsz` axis, Instrument Sans, JetBrains Mono) are downloaded at build and self-hosted under `/_astro/fonts/`, so a build needs network the first time.
 
 Not installed yet (the TRD plans them): MDX, content collections, Shiki, Sveltia CMS, Pagefind, Cloudflare Workers Static Assets and `wrangler`, Terraform, GitHub Actions, Sonar. List a tool here only once it is installed.
 
@@ -45,9 +46,13 @@ Never run `pnpm approve-builds --all`: install scripts stay blocked unless a dep
 .claude/skills/        workflow skills (see .claude/skills/README.md)
 .nvmrc                 Node 26 (LTS), same as CI
 design/                mockups (telas/*.dc.html), tokens.css, assets/ — visual reference (defers to PRD/TRD)
-docs/                  prd.md, trd.md (Portuguese), scope/, specs/
-src/lib/               logic in .ts (site.ts for now)
+docs/                  prd.md, trd.md (Portuguese), scope/, specs/, reviews/
+src/assets/            images processed by astro:assets (author avatar)
+src/components/        Band, Header, Footer, SEO (markup only)
+src/layouts/           Base.astro (fonts, tokens, SEO, Header, hero band, Footer)
+src/lib/               logic in .ts: site, links, seo, site-url, tone
 src/pages/             routes (placeholder index.astro)
+src/styles/            tokens.css (copy of design/tokens.css), global.css
 tests/unit/            Vitest (see tests/AGENTS.md)
 tests/e2e/             Playwright + axe
 tests/fixtures/content/  test posts, kept apart from real posts (empty until 1.2)
@@ -61,6 +66,10 @@ Planned layout: the TRD's "Estrutura do repositório" section (`content/`, `comp
 - English for code, commits, branches and workflow docs. Portuguese only for the PRD, the TRD, `docs/adr/` and blog content, including posts and site UI copy (RN5).
 - Logic goes in `.ts` files (`src/lib`), and `.astro` files contain markup only, because Sonar does not analyze `.astro`.
 - Site code reads only `PUBLIC_` env vars. Pages ship zero JS by default, and an island is added only where it is needed.
+- `PUBLIC_SITE_URL` sets the site origin (canonical, `og:url`, feeds). `astro.config.ts` reads it from the shell or from `.env` / `.env.local`, falls back to `http://localhost:4321`, and fails the build on an invalid value. `.env.example` documents it.
+- Every outbound link (GitHub, LinkedIn, e-mail, feeds) lives in `src/lib/links.ts`. It still holds `TODO` placeholders, and a build with a non-local `PUBLIC_SITE_URL` fails until they are filled in.
+- Pages use `Base.astro` and pass the opening band through `<Fragment slot="hero">`; `Base` gives it the same `tone` as the `Header`. Pages do not render `<Band>` for the opening band themselves.
+- RNF2 budget is per page: HTML + CSS + fonts under 150 KB with no JS files (`tests/e2e/layout-shell.spec.ts` measures the home).
 - E2E tests run on `tests/fixtures/content`, never on real posts.
 - Git flow: `feature/*` branches off `develop` and `hotfix/*` off `main`. `main` is production. Commits follow Conventional Commits (skills `branch` and `commit`). Before creating a branch, fetch and fast-forward local `develop` to `origin/develop`.
 - No co-author or tool attribution in commits or PRs.
