@@ -20,7 +20,8 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "lighthouse": "lhci autorun"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.1.6",
@@ -31,6 +32,7 @@
     "@astrojs/check": "^0.9.12",
     "@axe-core/playwright": "^4.14.1",
     "@eslint/js": "^10.0.1",
+    "@lhci/cli": "0.16.1",
     "@playwright/test": "^1.65.1",
     "@types/node": "^26.6.7",
     "@vitest/coverage-v8": "^5.1.1",
@@ -41,6 +43,7 @@
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.74.0",
-    "vitest": "^5.1.1"
+    "vitest": "^5.1.1",
+    "wrangler": "4.168.0"
   }
 }

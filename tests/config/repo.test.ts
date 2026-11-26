@@ -19,9 +19,14 @@ describe('project scaffold config', () => {
   });
 
   it('AC2: does not approve install scripts for any dependency', () => {
-    expect(read('pnpm-workspace.yaml')).not.toMatch(
-      /allowBuilds|onlyBuiltDependencies/,
-    );
+    const workspace = read('pnpm-workspace.yaml');
+    expect(workspace).not.toMatch(/onlyBuiltDependencies/);
+    // allowBuilds may only deny: an undecided script makes `pnpm install` fail.
+    const entries = workspace
+      .split('\n')
+      .filter((line) => /^ {2}[\w@/.-]+:\s*(true|false)\s*$/.test(line));
+    expect(entries.length).toBeGreaterThan(0);
+    for (const entry of entries) expect(entry).toMatch(/:\s*false\s*$/);
   });
 
   it('AC3: pins TypeScript to 6.0.x and uses the strictest preset', () => {
@@ -60,6 +65,7 @@ describe('project scaffold config', () => {
       'coverage/x',
       'playwright-report/x',
       'test-results/x',
+      '.lighthouseci/x',
     ]) {
       expect(ignored(path), path).toBe(true);
     }

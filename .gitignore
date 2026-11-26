@@ -16,6 +16,7 @@ dist/
 *.tfstate.*
 
 # Test output
+.lighthouseci/
 coverage/
 playwright-report/
 test-results/

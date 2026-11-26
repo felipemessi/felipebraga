@@ -1,1 +1,9 @@
 engineStrict: true
+
+# Install scripts stay blocked. These two come with wrangler: both ship their
+# binaries as prebuilt optional packages and work without a postinstall, so they
+# are denied explicitly instead of left undecided (an undecided script makes
+# `pnpm install` exit non-zero). Never use `pnpm approve-builds --all`.
+allowBuilds:
+  esbuild: false
+  workerd: false
