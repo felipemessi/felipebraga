@@ -66,7 +66,7 @@ Planned layout: the TRD's "Estrutura do repositório" section (`content/`, `comp
 - English for code, commits, branches and workflow docs. Portuguese only for the PRD, the TRD, `docs/adr/` and blog content, including posts and site UI copy (RN5).
 - Logic goes in `.ts` files (`src/lib`), and `.astro` files contain markup only, because Sonar does not analyze `.astro`.
 - Site code reads only `PUBLIC_` env vars. `PUBLIC_CONTENT_DIR` picks the content dir (default `src/content`); the e2e run sets it to `tests/fixtures/content`.
-- Post slug is the folder name under `posts/`; `sectionColor` values are the ASCII `data-tone` ids from `design/tokens.css`. `publishDate` is written as ISO 8601 with an offset (YAML parses it before Zod, so the zone is not validated). A `:` inside a frontmatter value needs quotes. Pages ship zero JS by default, and an island is added only where it is needed.
+- Every content id is lowercase kebab-case, and `prebuild` fails otherwise: the post slug is the folder name under `posts/`, and tag, series and page ids are the file name without the extension; `sectionColor` values are the ASCII `data-tone` ids from `design/tokens.css`. `publishDate` is written as ISO 8601 with an offset (YAML parses it before Zod, so the zone is not validated). A `:` inside a frontmatter value needs quotes. Pages ship zero JS by default, and an island is added only where it is needed.
 - E2E tests run on `tests/fixtures/content`, never on real posts.
 - Git flow: `feature/*` branches off `develop` and `hotfix/*` off `main`. `main` is production. Commits follow Conventional Commits (skills `branch` and `commit`). Before creating a branch, fetch and fast-forward local `develop` to `origin/develop`.
 - No co-author or tool attribution in commits or PRs.
