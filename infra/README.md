@@ -26,7 +26,7 @@ The build jobs of `deploy.yml` and `preview.yml` run the project's code and depe
 
 ## One-time setup (done by the owner)
 
-1. In the Cloudflare dashboard, enable the `workers.dev` subdomain and create a temporary **bootstrap** API token with the permissions _Account API Tokens Write_, _Workers R2 Storage Write_ and _Workers Scripts Write_. Delete it after step 2.
+1. In the Cloudflare dashboard, enable the `workers.dev` subdomain and create a temporary **bootstrap** API token with the permissions _Account API Tokens Write_, _Workers R2 Storage Write_ and _Workers Scripts Write_. Delete it after step 2. Also enable **R2** (R2 Object Storage, needs a payment method on file; the free tier covers the state): until then the bucket fails with error 10042, and the activation can take a few minutes to propagate.
 2. Apply the bootstrap root and keep its outputs at hand (`terraform output -raw <name>` for the sensitive ones):
 
    ```bash
@@ -36,7 +36,9 @@ The build jobs of `deploy.yml` and `preview.yml` run the project's code and depe
    terraform apply -var account_id=<account id> -var enable_domain_permissions=true
    ```
 
-3. **Check that R2 honours the state lockfile** before trusting it: run `terraform init` and `terraform plan` in `infra/cloudflare` in two terminals at once (with the R2 variables from step 4). The second must fail with a lock error. If it does not, switch the state to HCP Terraform (free tier) and record the change in an ADR.
+3. **Check that R2 honours the state lockfile** before trusting it: run `terraform init` and `terraform plan` in `infra/cloudflare` in two terminals at once (with the R2 variables from step 4). The second must fail with a lock error. If it does not, switch the state to HCP Terraform (free tier) and record the change in an ADR. Verified for this setup: a second `plan` fails with `Error acquiring the state lock` while another run holds it.
+
+   If `terraform init` fails with `tls: handshake failure` against the R2 endpoint, run `export GODEBUG=tlsmlkem=0` first. Go's post-quantum key share is rejected by the R2 S3 endpoint from some networks; `curl --tlsv1.2` reaches it, and the setting only affects the local shell.
 4. Create the environments by applying the `github` root locally, bringing the existing repository under management first. Review the plan before applying. `TF_GITHUB_TOKEN` is a fine-grained PAT for this repository only, with these permissions: Administration, Environments, Secrets and variables (read/write), Contents and Pull requests (read), Metadata (read).
 
    ```bash
