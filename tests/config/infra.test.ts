@@ -438,6 +438,15 @@ describe('infra and deploy: terraform roots', () => {
     expect(script).not.toContain('set -x');
   });
 
+  it('AC12: the local script feeds secrets through stdin, not a literal --body', () => {
+    const secretLines = read('infra/bootstrap/set-secrets.sh')
+      .split('\n')
+      .filter((line) => /gh secret set/.test(line) && !/^\s*#/.test(line));
+    expect(secretLines.length).toBeGreaterThan(0);
+    // `--body -` stores a literal "-"; the value must come from stdin.
+    for (const line of secretLines) expect(line).not.toMatch(/--body/);
+  });
+
   it('AC12: gives each job its own scoped token', () => {
     const main = read('infra/bootstrap/main.tf');
     const token = (name: string): string =>

@@ -9,7 +9,9 @@ repo="${REPO:-felipemessi/felipebraga}"
 : "${CLOUDFLARE_ACCOUNT_ID:?export CLOUDFLARE_ACCOUNT_ID first}"
 
 out() { terraform output -raw "$1"; }
-secret() { gh secret set "$1" --env "$2" --repo "$repo" --body -; }
+# gh reads the value from stdin when --body is absent. `--body -` would store a
+# literal "-" as the secret.
+secret() { gh secret set "$1" --env "$2" --repo "$repo"; }
 
 for env in production preview infra-plan infra; do
   printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | secret CLOUDFLARE_ACCOUNT_ID "$env"
