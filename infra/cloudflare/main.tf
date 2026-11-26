@@ -25,6 +25,17 @@ resource "cloudflare_zone" "site" {
   }
 }
 
+# Redirect plain HTTP to HTTPS. HSTS only protects a browser that has already
+# visited over HTTPS, so without this a first request over http:// is served
+# as is.
+resource "cloudflare_zone_setting" "always_use_https" {
+  count = local.has_domain ? 1 : 0
+
+  zone_id    = cloudflare_zone.site[0].id
+  setting_id = "always_use_https"
+  value      = "on"
+}
+
 resource "cloudflare_workers_custom_domain" "site" {
   count = local.has_domain ? 1 : 0
 
