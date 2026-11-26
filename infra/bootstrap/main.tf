@@ -10,8 +10,12 @@ locals {
   account_scope = jsonencode({
     "com.cloudflare.api.account.${var.account_id}" = "*"
   })
+  # Zone permissions on an account-owned token must nest the zones under the
+  # account, or the API answers "Must specify a zone for account owned tokens".
   zone_scope = jsonencode({
-    "com.cloudflare.api.account.zone.*" = "*"
+    "com.cloudflare.api.account.${var.account_id}" = {
+      "com.cloudflare.api.account.zone.*" = "*"
+    }
   })
 }
 
