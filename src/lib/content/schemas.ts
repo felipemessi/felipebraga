@@ -40,7 +40,7 @@ export function postSchema({ image, reference }: SchemaHelpers) {
       cover: image().optional(),
       coverAlt: z.string().trim().min(1).optional(),
       sectionColor: z.enum(SECTION_COLORS).optional(),
-      canonical: z.url().optional(),
+      canonical: z.url({ protocol: /^https?$/ }).optional(),
     })
     .superRefine((post, ctx) => {
       if (new Set(post.tags.map((tag) => tag.id)).size !== post.tags.length) {

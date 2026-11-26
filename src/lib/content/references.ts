@@ -12,8 +12,18 @@ export type ParsedPost =
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---/;
 
+/** A reference is an id string or the `{ collection, id }` object form. */
+function referenceId(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && value !== null && 'id' in value) {
+    const { id } = value;
+    if (typeof id === 'string') return id;
+  }
+  return String(value);
+}
+
 export function parsePostReferences(id: string, source: string): ParsedPost {
-  const text = source.startsWith('﻿') ? source.slice(1) : source;
+  const text = source.startsWith('\uFEFF') ? source.slice(1) : source;
   const block = FRONTMATTER.exec(text)?.[1];
   if (block === undefined) {
     return { problem: `posts/${id}: missing frontmatter` };
@@ -36,8 +46,11 @@ export function parsePostReferences(id: string, source: string): ParsedPost {
   return {
     references: {
       id,
-      tags: Array.isArray(tags) ? tags.map(String) : [],
-      series: typeof series === 'string' ? series : undefined,
+      tags: Array.isArray(tags) ? tags.map(referenceId) : [],
+      series:
+        series === undefined || series === null
+          ? undefined
+          : referenceId(series),
     },
   };
 }

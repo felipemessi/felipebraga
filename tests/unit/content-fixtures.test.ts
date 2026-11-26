@@ -84,6 +84,12 @@ describe('AC10: fixtures cover every post kind', () => {
   });
 });
 
+function withoutContentDir(): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  delete env['PUBLIC_CONTENT_DIR'];
+  return env;
+}
+
 function contentDir(files: Record<string, string>): string {
   const dir = mkdtempSync(join(tmpdir(), 'content-'));
   for (const [path, text] of Object.entries(files)) {
@@ -143,6 +149,63 @@ describe('AC6: the reference check fails on a dangling reference', () => {
     const result = run(script, dir);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('tags/DevOps: id must be lowercase');
+  });
+
+  it('fails when a post folder has both index.md and index.mdx', () => {
+    const dir = contentDir({
+      'tags/devops.yaml': TAG,
+      'posts/x/index.md': POST('devops'),
+      'posts/x/index.mdx': POST('devops'),
+    });
+    const result = run(script, dir);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('posts/x: has both index.md and index.mdx');
+  });
+
+  it('accepts the object form of a reference', () => {
+    const dir = contentDir({
+      'tags/devops.yaml': TAG,
+      'posts/x/index.md':
+        '---\ntags: [{ collection: tags, id: devops }]\n---\n',
+    });
+    expect(run(script, dir).status).toBe(0);
+  });
+
+  it('reads PUBLIC_CONTENT_DIR from a .env file like Astro does', () => {
+    const bad = contentDir({
+      'tags/devops.yaml': TAG,
+      'posts/x/index.md': POST('ghost'),
+    });
+    const project = contentDir({ '.env': `PUBLIC_CONTENT_DIR=${bad}\n` });
+    const result = spawnSync(
+      process.execPath,
+      [join(process.cwd(), 'scripts/check-references.ts')],
+      { cwd: project, env: withoutContentDir(), encoding: 'utf8' },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('"ghost"');
+  });
+
+  it('lets a real environment variable win over .env', () => {
+    const bad = contentDir({
+      'tags/devops.yaml': TAG,
+      'posts/x/index.md': POST('ghost'),
+    });
+    const good = contentDir({
+      'tags/devops.yaml': TAG,
+      'posts/x/index.md': POST('devops'),
+    });
+    const project = contentDir({ '.env': `PUBLIC_CONTENT_DIR=${bad}\n` });
+    const result = spawnSync(
+      process.execPath,
+      [join(process.cwd(), 'scripts/check-references.ts')],
+      {
+        cwd: project,
+        env: { ...withoutContentDir(), PUBLIC_CONTENT_DIR: good },
+        encoding: 'utf8',
+      },
+    );
+    expect(result.status).toBe(0);
   });
 
   it('accepts a valid lowercase tag and post', () => {

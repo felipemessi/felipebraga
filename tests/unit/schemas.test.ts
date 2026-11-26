@@ -129,6 +129,22 @@ describe('AC2-AC5: postSchema', () => {
     );
   });
 
+  it.each([
+    'javascript:alert(1)',
+    'mailto:a@b.com',
+    'ftp://example.com/x',
+    'data:text/html,hi',
+  ])('rejects the non-http(s) canonical %s', (canonical) => {
+    expect(issuePaths({ ...valid, canonical })).toContain('canonical');
+  });
+
+  it.each(['https://example.com/x', 'http://example.com/x?a=1#b'])(
+    'accepts the canonical %s',
+    (canonical) => {
+      expect(issuePaths({ ...valid, canonical })).toEqual([]);
+    },
+  );
+
   it('rejects a canonical that is not an absolute URL', () => {
     expect(issuePaths({ ...valid, canonical: '/relative' })).toContain(
       'canonical',

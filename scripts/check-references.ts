@@ -29,6 +29,12 @@ function readPosts(dir: string): {
     const files = ['index.md', 'index.mdx']
       .map((name) => join(dir, slug.name, name))
       .filter((candidate) => existsSync(candidate));
+    if (files.length > 1) {
+      problems.push(
+        `posts/${slug.name}: has both index.md and index.mdx, keep one`,
+      );
+      continue;
+    }
     for (const file of files) {
       const parsed = parsePostReferences(slug.name, readFileSync(file, 'utf8'));
       if (parsed.references) posts.push(parsed.references);
@@ -36,6 +42,18 @@ function readPosts(dir: string): {
     }
   }
   return { posts, problems };
+}
+
+// Astro reads PUBLIC_ vars from these files too (build mode is production).
+// loadEnvFile never overrides a variable that is already set, so the first
+// file loaded wins and the order below is the priority order.
+for (const file of [
+  '.env.production.local',
+  '.env.local',
+  '.env.production',
+  '.env',
+]) {
+  if (existsSync(file)) process.loadEnvFile(file);
 }
 
 const base = resolveContentDir(process.env);

@@ -107,4 +107,37 @@ describe('AC6: parsePostReferences', () => {
       series: undefined,
     });
   });
+
+  it('reads the object form of a reference', () => {
+    const source =
+      '---\ntags:\n  - { collection: tags, id: devops }\n  - ia\nseries: { collection: series, id: agentes }\n---\n';
+    expect(parsePostReferences('a', source).references).toEqual({
+      id: 'a',
+      tags: ['devops', 'ia'],
+      series: 'agentes',
+    });
+  });
+
+  it('keeps a non-string series so it is reported instead of skipped', () => {
+    const source = '---\ntags: [devops]\nseries: 123\n---\n';
+    const references = parsePostReferences('a', source).references;
+    expect(references?.series).toBe('123');
+    expect(
+      findBrokenReferences(
+        references ? [references] : [],
+        new Set(['devops']),
+        new Set(['agentes']),
+      ),
+    ).toEqual([
+      'posts/a: series "123" does not exist in the series collection',
+    ]);
+  });
+
+  it('stringifies a reference that is neither a string nor an object with an id', () => {
+    const source = '---\ntags: [1, { id: 5 }]\n---\n';
+    expect(parsePostReferences('a', source).references?.tags).toEqual([
+      '1',
+      '[object Object]',
+    ]);
+  });
 });
