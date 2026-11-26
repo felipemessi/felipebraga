@@ -24,26 +24,36 @@ const run = (children: Element[], path = '/x/posts/helm/index.mdx') => {
 };
 
 describe('AC12: heading anchors', () => {
-  it('adds a # link to h2 and h3 with the id and a Portuguese label', () => {
+  it('puts a # link beside each h2 and h3, not inside it', () => {
     const tree = run([
       heading('h2', 'um-values', 'Um values'),
       heading('h3', 'sub', 'Sub'),
     ]);
-    const [h2, h3] = tree.children as Element[];
-    const anchor = h2?.children[0] as Element;
-    expect(anchor.tagName).toBe('a');
-    expect(anchor.properties).toMatchObject({
+    const [first, second] = tree.children as Element[];
+    expect(first?.tagName).toBe('div');
+    expect(first?.properties['className']).toEqual(['heading']);
+    const [h2, anchor] = first?.children as Element[];
+    expect(h2?.tagName).toBe('h2');
+    expect(h2?.children).toEqual([{ type: 'text', value: 'Um values' }]);
+    expect(anchor?.tagName).toBe('a');
+    expect(anchor?.properties).toMatchObject({
       className: ['heading-anchor'],
       href: '#um-values',
       ariaLabel: 'Link para a seção Um values',
     });
-    expect(anchor.children).toEqual([{ type: 'text', value: '#' }]);
-    expect((h3?.children[0] as Element).properties['href']).toBe('#sub');
+    expect(anchor?.children).toEqual([{ type: 'text', value: '#' }]);
+    const [h3, anchor3] = second?.children as Element[];
+    expect(h3?.tagName).toBe('h3');
+    expect(anchor3?.properties['href']).toBe('#sub');
   });
 
-  it('keeps the id on the heading', () => {
+  it('keeps the id on the heading and wraps it once', () => {
     const tree = run([heading('h2', 'a', 'A')]);
-    expect((tree.children[0] as Element).properties['id']).toBe('a');
+    const wrapper = tree.children[0] as Element;
+    expect((wrapper.children[0] as Element).properties['id']).toBe('a');
+    expect(wrapper.children).toHaveLength(2);
+    rehypeHeadingAnchors()(tree, { path: '/x/posts/helm/index.mdx' });
+    expect(tree.children).toHaveLength(1);
   });
 
   it('uses the text of nested elements in the label', () => {
@@ -62,8 +72,9 @@ describe('AC12: heading anchors', () => {
         { type: 'comment', value: 'x' },
       ],
     };
-    run([h2]);
-    expect((h2.children[0] as Element).properties['ariaLabel']).toBe(
+    const tree = run([h2]);
+    const anchor = (tree.children[0] as Element).children[1] as Element;
+    expect(anchor.properties['ariaLabel']).toBe(
       'Link para a seção Usando helm',
     );
   });
@@ -75,6 +86,7 @@ describe('AC12: heading anchors', () => {
       heading('h2', undefined, 'Sem id'),
     ]);
     for (const node of tree.children as Element[]) {
+      expect(node.tagName).not.toBe('div');
       expect(node.children).toHaveLength(1);
     }
   });

@@ -14,6 +14,7 @@ const { href, primary = false } = Astro.props;
 
 <style>
   .tag {
+    position: relative;
     display: inline-flex;
     align-items: center;
     min-height: 32px;
@@ -24,6 +25,13 @@ const { href, primary = false } = Astro.props;
     font-size: 0.8125rem;
     font-weight: 600;
     text-decoration: none;
+  }
+
+  /* The pill stays compact; the hit area reaches 44px. */
+  .tag::after {
+    position: absolute;
+    inset: -6px 0;
+    content: '';
   }
 
   .primary {

@@ -94,4 +94,26 @@ describe('AC3: the post view', () => {
     expect(view.jsonLd).toContain('https://origin.example.org/p');
     expect(toPostView(base).jsonLd).toContain('https://example.com/blog/helm');
   });
+
+  it('keeps the breadcrumb on this site for a republished post', () => {
+    const view = toPostView({
+      ...base,
+      data: { ...base.data, canonical: 'https://origin.example.org/p' },
+    });
+    const graph = (
+      JSON.parse(view.jsonLd) as {
+        '@graph': {
+          '@type': string;
+          mainEntityOfPage?: { '@id': string };
+          itemListElement?: { item: string }[];
+        }[];
+      }
+    )['@graph'];
+    expect(graph[0]?.mainEntityOfPage?.['@id']).toBe(
+      'https://origin.example.org/p',
+    );
+    expect(graph[1]?.itemListElement?.at(-1)?.item).toBe(
+      'https://example.com/blog/helm',
+    );
+  });
 });

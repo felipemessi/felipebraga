@@ -21,13 +21,22 @@ export interface DayParts {
   day: number;
 }
 
+/**
+ * A value at exactly UTC midnight is a date-only value (`2026-11-12`, which the
+ * schema reads as UTC midnight): it names a calendar day, not an instant, so it
+ * keeps its own day instead of sliding to the evening before in São Paulo.
+ */
+export function isDateOnly(date: Date): boolean {
+  return date.getTime() % 86_400_000 === 0;
+}
+
 /** Calendar day of an instant in the site's time zone. */
 export function dayParts(
   date: Date,
   timeZone: string = SITE.timeZone,
 ): DayParts {
   const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone,
+    timeZone: isDateOnly(date) ? 'UTC' : timeZone,
     year: 'numeric',
     month: 'numeric',
     day: 'numeric',

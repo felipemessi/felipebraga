@@ -15,9 +15,12 @@
   margin: 0 0 20px;
 }
 
+.prose .heading {
+  position: relative;
+}
+
 .prose h2,
 .prose h3 {
-  position: relative;
   font-family: var(--font-display);
   scroll-margin-top: calc(var(--space-16) + var(--space-2));
 }
@@ -153,6 +156,19 @@
   text-decoration: none;
 }
 
+.prose a[data-footnote-ref],
+.prose a[data-footnote-backref] {
+  position: relative;
+}
+
+/* Small links keep their look; the hit area reaches 44px. */
+.prose a[data-footnote-ref]::after,
+.prose a[data-footnote-backref]::after {
+  position: absolute;
+  inset: -14px -10px;
+  content: '';
+}
+
 .prose a[data-footnote-ref] {
   display: inline-block;
   min-width: 24px;
@@ -207,8 +223,7 @@
     opacity: 0;
   }
 
-  .prose h2:hover .heading-anchor,
-  .prose h3:hover .heading-anchor,
+  .prose .heading:hover .heading-anchor,
   .prose .heading-anchor:focus-visible {
     opacity: 1;
   }

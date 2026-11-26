@@ -72,8 +72,15 @@ const { tone, label } = calloutSpec(type);
   }
 
   .text :global(p) {
+    margin: 0 0 var(--space-3);
+  }
+
+  .text :global(p:first-child) {
     display: inline;
-    margin: 0;
+  }
+
+  .text :global(p:last-child) {
+    margin-bottom: 0;
   }
 
   strong {

@@ -71,7 +71,8 @@ export function toPostView(input: PostViewInput): PostView {
     primary: index === 0,
   }));
   const path = postPath(slug);
-  const url = data.canonical ?? absoluteUrl(input.site, path);
+  const pageUrl = absoluteUrl(input.site, path);
+  const url = data.canonical ?? pageUrl;
   const ogImage = input.coverSrc ?? input.authorImage;
 
   return {
@@ -88,6 +89,7 @@ export function toPostView(input: PostViewInput): PostView {
     jsonLd: articleJsonLd({
       site: input.site,
       url,
+      pageUrl,
       title: data.title,
       description: data.description,
       publishedTime: data.publishDate,

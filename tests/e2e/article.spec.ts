@@ -336,7 +336,10 @@ test.describe('AC10/AC11/AC12: prose, footnotes and anchors', () => {
     for (const index of [0, 1, 2]) {
       const heading = headings.nth(index);
       const id = await heading.getAttribute('id');
-      const anchor = heading.locator('a.heading-anchor');
+      const anchor = page
+        .locator('.prose .heading')
+        .nth(index)
+        .locator('a.heading-anchor');
       await expect(anchor).toHaveAttribute('href', `#${String(id)}`);
       await expect(anchor).toHaveAttribute(
         'aria-label',
@@ -350,7 +353,7 @@ test.describe('AC10/AC11/AC12: prose, footnotes and anchors', () => {
     isMobile,
   }) => {
     await page.goto(URL);
-    const heading = page.locator('.prose h2').first();
+    const heading = page.locator('.prose .heading').first();
     const anchor = heading.locator('a.heading-anchor');
     if (isMobile) {
       await expect(anchor).toBeHidden();
@@ -431,6 +434,74 @@ test('AC15: the author band has RSS and LinkedIn and no hire-me link', async ({
     for (const index of [0, 1]) {
       const box = await links.nth(index).boundingBox();
       expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+    }
+  }
+});
+
+test('AC12: the anchor is not part of the heading name', async ({ page }) => {
+  await page.goto(URL);
+  const h2 = page.getByRole('heading', {
+    level: 2,
+    name: 'Um values por camada',
+    exact: true,
+  });
+  await expect(h2).toHaveCount(1);
+  await expect(h2.locator('a')).toHaveCount(0);
+});
+
+test('AC5: a date-only publishDate keeps its own day', async ({ page }) => {
+  await page.goto('/blog/primeiro-post');
+  await expect(page.locator('.meta span:visible')).toHaveText(/^10 jan 2026/);
+});
+
+test('AC3: without a Toc the article still starts where the hero does', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'desktop layout');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/blog/post-mdx');
+  await expect(page.locator('aside')).toHaveCount(0);
+  const left = (selector: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((node) => node.getBoundingClientRect().left);
+  const hero = await left('.hero');
+  expect(Math.round(await left('.prose'))).toBe(Math.round(hero));
+  expect(Math.round(await left('section[data-tone="salvia"] .inner'))).toBe(
+    Math.round(hero),
+  );
+});
+
+test('AC16/AC18: tag pills and footnote refs have a 44px hit area on mobile', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'touch targets matter on mobile');
+  await page.goto(URL);
+  const targets = [
+    page.locator('.hero .tags a').first(),
+    page.locator('a[data-footnote-ref]').first(),
+  ];
+  for (const target of targets) {
+    await target.scrollIntoViewIfNeeded();
+    const href = await target.getAttribute('href');
+    const box = await target.boundingBox();
+    expect(box).not.toBeNull();
+    const x = (box?.x ?? 0) + (box?.width ?? 0) / 2;
+    const mid = (box?.y ?? 0) + (box?.height ?? 0) / 2;
+    // 22px each way from the center is the 44px target.
+    for (const y of [mid - 21, mid + 21]) {
+      const hit = await page.evaluate(
+        ([px, py]) =>
+          document
+            .elementFromPoint(px ?? 0, py ?? 0)
+            ?.closest('a')
+            ?.getAttribute('href'),
+        [x, y],
+      );
+      expect(hit).toBe(href);
     }
   }
 });

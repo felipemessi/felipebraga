@@ -202,6 +202,8 @@ test('AC16/AC19: the home HTML, CSS and fonts stay under 150 KB and the home ref
   // JS files may exist for an article (the copy button), never for the home.
   const html = readFileSync('dist/index.html', 'utf8');
   expect(html).not.toMatch(/<script[^>]*\ssrc=/);
+  // ...nor an inline script: the only one is the JSON-LD data block.
+  expect(html).not.toMatch(/<script(?![^>]*ld\+json)/);
 
   // RNF2 is per page: weigh the home plus the CSS and fonts it references.
   const refs = (text: string): string[] =>

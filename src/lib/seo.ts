@@ -141,8 +141,10 @@ export function personJsonLd(site: string, image: string): string {
 
 export interface BlogPostingInput {
   site: string;
-  /** Canonical URL of the post, absolute. */
+  /** Canonical URL of the post, absolute (may be another site). */
   url: string;
+  /** The post's own URL on this site, for the breadcrumb. */
+  pageUrl: string;
   title: string;
   description: string;
   publishedTime: Date;
@@ -191,7 +193,7 @@ export function articleJsonLd(input: BlogPostingInput): string {
     '@context': 'https://schema.org',
     '@graph': [
       blogPostingNode(input),
-      breadcrumbNode(input.site, input.title, input.url),
+      breadcrumbNode(input.site, input.title, input.pageUrl),
     ],
   });
 }

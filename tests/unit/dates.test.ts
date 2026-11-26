@@ -3,6 +3,7 @@ import {
   dayParts,
   formatDate,
   formatUpdated,
+  isDateOnly,
   isUpdatedLater,
 } from '../../src/lib/post/dates';
 
@@ -51,6 +52,30 @@ describe('AC5: dates in America/Sao_Paulo', () => {
       'nov',
       'dez',
     ]);
+  });
+});
+
+describe('AC5: date-only values keep their own day', () => {
+  it('shows 2026-11-12 as 12 nov, not the evening before', () => {
+    expect(formatDate(new Date('2026-11-12'))).toBe('12 nov 2026');
+    expect(dayParts(new Date('2026-11-12'))).toEqual({
+      year: 2026,
+      month: 11,
+      day: 12,
+    });
+  });
+
+  it('treats a datetime at UTC midnight as the same calendar day', () => {
+    expect(isDateOnly(new Date('2026-11-12T00:00:00Z'))).toBe(true);
+    expect(isDateOnly(new Date('2026-11-12T00:00:01Z'))).toBe(false);
+    expect(isDateOnly(new Date('2026-11-12T09:00:00-03:00'))).toBe(false);
+  });
+
+  it('compares date-only publish and update days correctly', () => {
+    const published = new Date('2026-11-12');
+    expect(isUpdatedLater(published, new Date('2026-11-12'))).toBe(false);
+    expect(isUpdatedLater(published, new Date('2026-11-13'))).toBe(true);
+    expect(formatUpdated(published, new Date('2026-11-13'))).toBe('13 nov');
   });
 });
 

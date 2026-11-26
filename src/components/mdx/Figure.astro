@@ -14,13 +14,22 @@ interface Props {
 
 const { src, alt, caption, wide = false } = Astro.props;
 
-const images = {
+type Loader = () => Promise<{ default: ImageMetadata }>;
+
+// Fixture images are bundled only when the build reads the fixture content dir;
+// in a real build the condition is a constant and this branch is dropped.
+const fixtureImages: Record<string, Loader> =
+  import.meta.env.PUBLIC_CONTENT_DIR === 'tests/fixtures/content'
+    ? import.meta.glob<{ default: ImageMetadata }>(
+        '/tests/fixtures/content/posts/**/*.{png,jpg,jpeg,webp,avif,gif}',
+      )
+    : {};
+
+const images: Record<string, Loader> = {
   ...import.meta.glob<{ default: ImageMetadata }>(
     '/src/content/posts/**/*.{png,jpg,jpeg,webp,avif,gif}',
   ),
-  ...import.meta.glob<{ default: ImageMetadata }>(
-    '/tests/fixtures/content/posts/**/*.{png,jpg,jpeg,webp,avif,gif}',
-  ),
+  ...fixtureImages,
 };
 
 const name = typeof src === 'string' ? src : 'image';

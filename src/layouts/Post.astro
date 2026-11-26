@@ -95,7 +95,7 @@ const components = { Tldr, Callout, Figure };
   {showToc && <Toc {toc} tone={view.tone} variant="bar" />}
 
   <section data-tone="creme" class="body" style={toneVars(view.tone)}>
-    <div class="container layout">
+    <div class:list={['container', 'layout', { solo: !showToc }]}>
       {showToc && <Toc {toc} tone={view.tone} variant="aside" />}
       <article class="prose">
         <Content {components} />
@@ -207,6 +207,11 @@ const components = { Tldr, Callout, Figure };
   }
 
   @media (min-width: 1024px) {
+    /* No Toc column: the article still starts where the hero does. */
+    .solo {
+      padding-left: calc(var(--gutter) + 320px);
+    }
+
     .hero {
       margin-left: 320px;
     }

@@ -123,6 +123,7 @@ describe('AC16: article SEO', () => {
   const input = {
     site,
     url: `${site}/blog/x`,
+    pageUrl: `${site}/blog/x`,
     title: 'Helm',
     description: 'Descrição',
     publishedTime: published,

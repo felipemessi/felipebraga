@@ -28,6 +28,7 @@ export interface Clipboard {
 export type Schedule = (callback: () => void, ms: number) => unknown;
 
 export const COPIED_MS = 2000;
+export const COPY_LABEL = 'Copiar';
 export const COPIED_LABEL = 'Copiado';
 export const FAILED_LABEL = 'Não foi possível copiar';
 
@@ -38,10 +39,13 @@ export function codeText(code: TextNode | null): string {
 
 export function initCopyButtons(
   root: Root,
-  clipboard: Clipboard,
+  clipboard: Clipboard | undefined,
   schedule: Schedule = setTimeout,
 ): void {
+  // No clipboard API (insecure origin, some webviews): the buttons stay hidden.
+  if (typeof clipboard?.writeText !== 'function') return;
   for (const button of root.querySelectorAll('[data-copy]')) {
+    let clicks = 0;
     const frame = button.closest('figure');
     if (frame === null) continue;
     // The button ships hidden: without this script there is no dead control.
@@ -52,14 +56,17 @@ export function initCopyButtons(
       const announce = (message: string): void => {
         if (status !== null) status.textContent = message;
       };
-      const original = label?.textContent ?? '';
       clipboard.writeText(codeText(frame.querySelector('pre code'))).then(
         () => {
           if (label !== null) label.textContent = COPIED_LABEL;
           button.setAttribute('data-copied', '');
           announce(COPIED_LABEL);
+          clicks += 1;
+          const mine = clicks;
           schedule(() => {
-            if (label !== null) label.textContent = original;
+            // A later click owns the label and the timer now.
+            if (mine !== clicks) return;
+            if (label !== null) label.textContent = COPY_LABEL;
             button.removeAttribute('data-copied');
             announce('');
           }, COPIED_MS);

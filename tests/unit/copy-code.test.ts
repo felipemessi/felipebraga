@@ -87,6 +87,38 @@ describe('AC7: copy button', () => {
     expect(t.label.textContent).toBe('Copiar');
   });
 
+  it('does not restore the label early after a second click', async () => {
+    const t = setup();
+    const schedule = vi.fn();
+    initCopyButtons(
+      { querySelectorAll: () => [t.button] },
+      { writeText: () => Promise.resolve() },
+      schedule,
+    );
+    t.click();
+    await Promise.resolve();
+    t.click();
+    await Promise.resolve();
+    expect(schedule).toHaveBeenCalledTimes(2);
+    // The first timer fires while the second click still owns the label.
+    (schedule.mock.calls[0]?.[0] as () => void)();
+    expect(t.label.textContent).toBe('Copiado');
+    (schedule.mock.calls[1]?.[0] as () => void)();
+    expect(t.label.textContent).toBe('Copiar');
+    expect(t.attributes.has('data-copied')).toBe(false);
+  });
+
+  it('keeps the button hidden when there is no clipboard API', () => {
+    const t = setup();
+    initCopyButtons({ querySelectorAll: () => [t.button] }, undefined);
+    expect(t.button.hidden).toBe(true);
+    initCopyButtons(
+      { querySelectorAll: () => [t.button] },
+      {} as unknown as { writeText(text: string): Promise<void> },
+    );
+    expect(t.button.hidden).toBe(true);
+  });
+
   it('leaves a button outside a figure hidden', () => {
     const button: CopyButton = {
       hidden: true,
