@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Write the context files — root AGENTS.md, nested AGENTS.md per area, and a CLAUDE.md that only points to AGENTS.md — describing the real stack, commands and conventions. Use after scaffolding, on an existing codebase, or for "audit", "create AGENTS.md". Not for keeping them current after changes (sync).
+description: Write the context files — root AGENTS.md and nested AGENTS.md per area — describing the real stack, commands and conventions. Use after scaffolding, on an existing codebase, or for "audit", "create AGENTS.md". Not for keeping them current after changes (sync).
 ---
 
 # audit
@@ -10,7 +10,7 @@ description: Write the context files — root AGENTS.md, nested AGENTS.md per ar
 ## Read
 `docs/trd.md`, `docs/prd.md`, `design/AGENTS.md`, and the real code (`package.json`, configs, `.github/workflows/`, `infra/`). The code wins over the docs; report any mismatch.
 
-Known conflict: `design/AGENTS.md` mentions Next.js, but the TRD chose **Astro 6**. Stack follows the TRD; visuals follow `design/`.
+The PRD and TRD are the main sources of truth; `design/` covers visuals only and defers to them.
 
 ## Write
 **`AGENTS.md`** (short and factual):
@@ -27,8 +27,6 @@ Known conflict: `design/AGENTS.md` mentions Next.js, but the TRD chose **Astro 6
 - Workflow: list the skills and where each writes.
 
 **Nested `AGENTS.md`** only for areas with their own rules (e.g. `infra/`, `src/content/`, `tests/`). Don't rewrite `design/AGENTS.md`; just link to it.
-
-**`CLAUDE.md`**: a single line, `@AGENTS.md`.
 
 ## Rules
 Don't invent commands or conventions. Make small edits to existing files and show the diff. Don't change any code.
