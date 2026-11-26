@@ -71,6 +71,14 @@ resource "github_repository_environment_deployment_policy" "production_main" {
   branch_pattern = "main"
 }
 
+# Plans (pull requests, pushes to main, the weekly drift check). No reviewer, so
+# it never waits, but it holds the only credentials a plan needs. Pull requests
+# from forks and Dependabot get no secrets, and the workflows skip them.
+resource "github_repository_environment" "infra_plan" {
+  repository  = github_repository.site.name
+  environment = "infra-plan"
+}
+
 resource "github_repository_environment" "infra" {
   repository  = github_repository.site.name
   environment = "infra"

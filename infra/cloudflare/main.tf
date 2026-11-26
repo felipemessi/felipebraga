@@ -17,6 +17,12 @@ resource "cloudflare_zone" "site" {
   account = { id = var.account_id }
   name    = var.domain
   type    = "full"
+
+  # Setting var.domain back to null would otherwise delete the zone and every
+  # DNS record in it. Remove the zone by hand if that is really intended.
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "cloudflare_workers_custom_domain" "site" {

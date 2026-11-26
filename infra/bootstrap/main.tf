@@ -6,6 +6,15 @@ provider "cloudflare" {
   # Reads CLOUDFLARE_API_TOKEN from the environment.
 }
 
+locals {
+  account_scope = jsonencode({
+    "com.cloudflare.api.account.${var.account_id}" = "*"
+  })
+  zone_scope = jsonencode({
+    "com.cloudflare.api.account.zone.*" = "*"
+  })
+}
+
 resource "cloudflare_r2_bucket" "state" {
   account_id = var.account_id
   name       = var.state_bucket_name
@@ -23,21 +32,65 @@ data "cloudflare_account_permission_groups" "r2_storage_write" {
   name       = "Workers R2 Storage Write"
 }
 
-# Token used by GitHub Actions: deploys the Worker and stores Terraform state.
-# Features that add Cloudflare resources (D1, Turnstile, Email, Web Analytics)
-# widen this list in their own change.
-resource "cloudflare_account_token" "ci" {
+# Optional, only when the custom domain is enabled. Verify the names in the
+# Cloudflare dashboard (API Tokens > permission groups) before turning it on.
+data "cloudflare_account_permission_groups" "domain" {
+  for_each = var.enable_domain_permissions ? toset(var.domain_permission_groups) : toset([])
+
   account_id = var.account_id
-  name       = "felipebraga-ci"
+  name       = each.value
+}
+
+# One token per job, so each can be revoked on its own and none holds more than
+# its job needs. They are stored as environment secrets, never repository ones.
+
+# Production deploy: only the `production` environment (main branch) uses it.
+resource "cloudflare_account_token" "deploy" {
+  account_id = var.account_id
+  name       = "felipebraga-deploy"
 
   policies = [{
     effect = "allow"
     permission_groups = [
       { id = data.cloudflare_account_permission_groups.workers_scripts_write.result[0].id },
-      { id = data.cloudflare_account_permission_groups.r2_storage_write.result[0].id },
     ]
-    resources = jsonencode({
-      "com.cloudflare.api.account.${var.account_id}" = "*"
-    })
+    resources = local.account_scope
   }]
+}
+
+# Preview uploads: only the `preview` environment uses it.
+resource "cloudflare_account_token" "preview" {
+  account_id = var.account_id
+  name       = "felipebraga-preview"
+
+  policies = [{
+    effect = "allow"
+    permission_groups = [
+      { id = data.cloudflare_account_permission_groups.workers_scripts_write.result[0].id },
+    ]
+    resources = local.account_scope
+  }]
+}
+
+# Terraform: state in R2, and the optional custom domain. Features that add
+# Cloudflare resources (D1, Turnstile, Email, Web Analytics) widen this token in
+# their own change. Only the `infra` and `infra-plan` environments use it.
+resource "cloudflare_account_token" "infra" {
+  account_id = var.account_id
+  name       = "felipebraga-infra"
+
+  policies = concat(
+    [{
+      effect = "allow"
+      permission_groups = [
+        { id = data.cloudflare_account_permission_groups.r2_storage_write.result[0].id },
+      ]
+      resources = local.account_scope
+    }],
+    var.enable_domain_permissions ? [{
+      effect            = "allow"
+      permission_groups = [for group in data.cloudflare_account_permission_groups.domain : { id = group.result[0].id }]
+      resources         = local.zone_scope
+    }] : [],
+  )
 }

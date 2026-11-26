@@ -1,6 +1,7 @@
 variable "account_id" {
   description = "Cloudflare account ID."
   type        = string
+  sensitive   = true
 }
 
 variable "worker_name" {
