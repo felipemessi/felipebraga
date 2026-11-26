@@ -8,7 +8,7 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 | # | Feature | Status | Spec | Notes |
 | --- | --- | --- | --- | --- |
 | 1.1 | Project scaffold (Astro 7, Node 26 LTS, pnpm with `packageManager` pinned, strict TS, lint, Vitest, Playwright + axe, `.gitignore`, `LICENSE`, `BRAND.md`) | Built | [spec](../specs/project-scaffold.md) | Pin TypeScript 6.0.x: `astro check` refuses TS 7 and `typescript-eslint` needs <6.1. Set `engines.node` >=26 to match `.nvmrc`. Run `audit` right after |
-| 1.2 | Content schema (`posts`, `tags`, `series`, `pages` collections, Zod rules, `isPublished`, test fixtures) | Planned | — | RN1, RN2, RNF5. Fields as in the TRD |
+| 1.2 | Content schema (`posts`, `tags`, `series`, `pages` collections, Zod rules, `isPublished`, test fixtures) | Built | [spec](../specs/content-schema.md) | RN1, RN2, RNF5. Fields as in the TRD |
 | 1.3 | Layout shell (tokens, fonts, Band/Header/Footer, base layout, `<SEO>` head) | Planned | — | Design step 1. Header tone matches the opening band |
 | 1.4 | Article page (MDX components: CodeBlock/Shiki, Callout, Figure, Tldr, Table, Footnotes, anchored headings, Toc, reading time) | Planned | — | Design step 2, the most important screen. Mermaid rendered at build time |
 | 1.5 | CI pipeline (`ci.yml`: lint, `astro check`, Vitest coverage, build, link check, Playwright, SonarQube gate) | Planned | — | RN13. Content-only changes skip e2e and Sonar |
