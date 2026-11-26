@@ -34,6 +34,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
+      - uses: ./.github/actions/chromium
       - run: pnpm build
       - name: Mark the preview as noindex
         run: |
