@@ -52,12 +52,13 @@ describe('project scaffold config', () => {
       '.terraform/x',
       'a.tfstate',
       'a.tfstate.backup',
-      'node_modules',
-      'dist',
-      '.astro',
-      'coverage',
-      'playwright-report',
-      'test-results',
+      'node_modules/x',
+      'dist/x',
+      '.astro/x',
+      'coverage/x',
+      'playwright-report/x',
+      'test-results/x',
+      '.lighthouseci/x',
     ]) {
       expect(ignored(path), path).toBe(true);
     }
