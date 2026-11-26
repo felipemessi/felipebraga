@@ -19,7 +19,7 @@ description: Build a feature (UI, backend or both) from its spec in docs/specs/,
 
 ## Building
 - Follow the build plan in order, one task at a time.
-- **Stack is the TRD's (Astro 6, native CSS custom properties, no UI framework)**, even though `design/AGENTS.md` says Next.js. Map its suggested structure to `src/pages`, `src/layouts`, `src/components`.
+- **Stack is the TRD's (Astro 7, native CSS custom properties, no UI framework).** The PRD and TRD win over `design/` on any conflict; `design/` is the visual reference.
 - Mockups are a spec for layout, spacing, color and copy. Don't copy their HTML.
 - Design rules that must not break: full-width `data-tone` bands; the header takes the opening band's color; text is always `--text`; no gradients or shadows; category → color mapping; hire CTAs only on `/me-contrate`; footer stuck to the bottom with `2rem` below it; no city mentioned; WCAG AA, visible focus, touch targets ≥ 44px.
 - Logic goes in `.ts` (`src/lib`). `.astro` holds markup only. Zero JS by default.

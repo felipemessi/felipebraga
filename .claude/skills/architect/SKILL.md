@@ -10,7 +10,7 @@ description: Make a real decision (feature design, data model, page, or project-
 ## Read
 `AGENTS.md`, `docs/prd.md`, `docs/trd.md`, `design/AGENTS.md`, `design/tokens.css`, the feature's row in `docs/scope/`, existing `docs/specs/` and `docs/adr/`.
 
-The TRD already decides the stack (Astro 6, Sveltia, Cloudflare Workers, D1, Resend, Pagefind, Vitest/Playwright, Sonar). Treat those as constraints and don't reopen them unless asked.
+The TRD already decides the stack (Astro 7 on Node 26 LTS, Sveltia, Cloudflare Workers, D1, Resend, Pagefind, Vitest/Playwright, Sonar). Treat those as constraints and don't reopen them unless asked.
 
 ## Steps
 1. Check for a similar spec. If there is one, ask whether this is new work, an update, or a replacement.

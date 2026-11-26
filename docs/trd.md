@@ -23,8 +23,9 @@ Todo commit, do PC ou do celular, dispara o build no Actions e o deploy no Cloud
 
 | Camada | Tecnologia | Decisão | Alternativa descartada |
 | --- | --- | --- | --- |
-| Gerador | Astro 6 (SSG, Node 22) | Zero JS por padrão, Content Layer com Zod, MDX, imagens e RSS oficiais | Next.js (runtime React, imagens dependem de servidor) |
-| Linguagem | TypeScript estrito | Tipos do schema chegam aos templates | — |
+| Gerador | Astro 7 (SSG, Node 26 LTS) | Zero JS por padrão, Content Layer com Zod, MDX, imagens e RSS oficiais | Next.js (runtime React, imagens dependem de servidor) |
+| Linguagem | TypeScript estrito (6.0.x) | Tipos do schema chegam aos templates; TS 7 ainda não é suportado pelo `astro check` nem pelo `typescript-eslint` | — |
+| Pacotes | pnpm (versão fixada em `packageManager`) | Dependências estritas, sem dependências fantasma; scripts de instalação bloqueados por padrão | npm |
 | Conteúdo | Markdown/MDX + frontmatter YAML no Git | Portável, versionado | Notion (lock-in, URLs de imagem expiram) |
 | CMS | Sveltia CMS em `/admin`, login por PAT | Sem deploy próprio; PWA no celular | Decap, Pages CMS |
 | Estilo | CSS nativo com custom properties (tokens da paleta) | Sem runtime; tokens no design | — |
@@ -118,7 +119,7 @@ O GitHub Actions faz todo o build; o Cloudflare só recebe `dist/`. Trocar de ho
 
 **Pipeline de deploy (`deploy.yml`, em push na `main`)**
 
-1. Checkout, Node 22, cache de dependências e de imagens processadas (`node_modules/.astro`).
+1. Checkout, `pnpm/action-setup`, Node 26 LTS (`.nvmrc`), `pnpm install --frozen-lockfile`, cache do store do pnpm e de imagens processadas (`node_modules/.astro`).
 2. `astro check` (tipos e schemas) e lint.
 3. `astro build` → `dist/`.
 4. `pagefind --site dist`.
@@ -303,8 +304,8 @@ Repositório público: tudo no Git é visível (inclusive rascunhos e histórico
 ### Aplicação
 
 - [ ] PAT do Sveltia fine-grained: só este repo, "Contents: read and write", validade de 90 dias
-- [ ] Só variáveis `PUBLIC_` no código do site (Astro 6 embute `import.meta.env` no build)
-- [ ] CSP do Astro 6 com hashes; exceções só para Cloudflare Web Analytics, Giscus e pixels quando ligados
+- [ ] Só variáveis `PUBLIC_` no código do site (Astro 7 embute `import.meta.env` no build)
+- [ ] CSP do Astro 7 com hashes; exceções só para Cloudflare Web Analytics, Giscus e pixels quando ligados
 - [ ] Headers: HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`
 - [ ] Endpoints (newsletter): validação, rate limit, Turnstile
 - [ ] EXIF removido das imagens
