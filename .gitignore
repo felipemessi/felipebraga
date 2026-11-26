@@ -1,0 +1,25 @@
+# Dependencies and build output
+node_modules/
+dist/
+.astro/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+.wrangler/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Test output
+.lighthouseci/
+coverage/
+playwright-report/
+test-results/
+
+# OS
+.DS_Store

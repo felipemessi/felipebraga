@@ -23,8 +23,9 @@ Todo commit, do PC ou do celular, dispara o build no Actions e o deploy no Cloud
 
 | Camada | Tecnologia | Decisão | Alternativa descartada |
 | --- | --- | --- | --- |
-| Gerador | Astro 6 (SSG, Node 22) | Zero JS por padrão, Content Layer com Zod, MDX, imagens e RSS oficiais | Next.js (runtime React, imagens dependem de servidor) |
-| Linguagem | TypeScript estrito | Tipos do schema chegam aos templates | — |
+| Gerador | Astro 7 (SSG, Node 26 LTS) | Zero JS por padrão, Content Layer com Zod, MDX, imagens e RSS oficiais | Next.js (runtime React, imagens dependem de servidor) |
+| Linguagem | TypeScript estrito (6.0.x) | Tipos do schema chegam aos templates; TS 7 ainda não é suportado pelo `astro check` nem pelo `typescript-eslint` | — |
+| Pacotes | pnpm (versão fixada em `packageManager`) | Dependências estritas, sem dependências fantasma; scripts de instalação bloqueados por padrão | npm |
 | Conteúdo | Markdown/MDX + frontmatter YAML no Git | Portável, versionado | Notion (lock-in, URLs de imagem expiram) |
 | CMS | Sveltia CMS em `/admin`, login por PAT | Sem deploy próprio; PWA no celular | Decap, Pages CMS |
 | Estilo | CSS nativo com custom properties (tokens da paleta) | Sem runtime; tokens no design | — |
@@ -118,7 +119,7 @@ O GitHub Actions faz todo o build; o Cloudflare só recebe `dist/`. Trocar de ho
 
 **Pipeline de deploy (`deploy.yml`, em push na `main`)**
 
-1. Checkout, Node 22, cache de dependências e de imagens processadas (`node_modules/.astro`).
+1. Checkout, `pnpm/action-setup`, Node 26 LTS (`.nvmrc`), `pnpm install --frozen-lockfile`, cache do store do pnpm e de imagens processadas (`node_modules/.astro`).
 2. `astro check` (tipos e schemas) e lint.
 3. `astro build` → `dist/`.
 4. `pagefind --site dist`.
@@ -145,7 +146,7 @@ O GitHub Actions faz todo o build; o Cloudflare só recebe `dist/`. Trocar de ho
 Toda infraestrutura do GitHub e da Cloudflare é provisionada por Terraform em `infra/`; nada é configurado à mão no painel. O deploy do site em si continua com `wrangler deploy` no pipeline: Terraform cuida da infraestrutura, o pipeline cuida das versões do código.
 
 - **`cloudflare/cloudflare`**: zona e registros DNS, domínio customizado e rotas do Worker, D1 (inscritos da newsletter), Email Routing e endereços verificados, widget Turnstile, Cron Triggers, site do Web Analytics, binding `send_email`, registros SPF/DKIM/DMARC do Resend, bucket R2 do state, regras de cache e segurança da zona.
-- **`integrations/github`**: repositório e configurações, rulesets de `main` e `develop`, environments (`preview`, `production`), secrets e variables do Actions, Discussions (para comentários no futuro), Dependabot e secret scanning.
+- **`integrations/github`**: repositório e configurações, rulesets de `main` e `develop`, environments (`preview`, `production`, `infra-plan`, `infra`), variables do Actions (os secrets são criados à mão por environment, para não passarem pelo state), Discussions (para comentários no futuro), Dependabot e secret scanning.
 
 ### Organização
 
@@ -159,8 +160,8 @@ infra/
 
 - **State**: backend `s3` apontando para um bucket R2 (compatível com S3), criptografado, um state por pasta. Locking a validar no R2; alternativa: HCP Terraform no plano gratuito.
 - **Versões**: Terraform e providers fixados (`required_version`, `.terraform.lock.hcl` versionado).
-- **Pipeline (`infra.yml`)**: em PR com mudança em `infra/`, roda `fmt -check`, `validate`, `tflint`, `trivy config` e `plan`, com o plano comentado no PR; no merge na `main`, `apply` no environment `production` com aprovação manual.
-- **Segredos**: tokens da Cloudflare e do GitHub (fine-grained, escopo mínimo) só em GitHub Secrets; nada sensível em `.tfvars` versionado.
+- **Pipeline (`infra.yml`)**: em PR com mudança em `infra/`, roda `fmt -check`, `validate`, `tflint`, `trivy config` e `plan`, com o plano comentado no PR; no merge na `main`, o plano é salvo e um único `apply` o aplica no environment `infra` com aprovação manual. O `production` não tem aprovação: é o que o deploy do site e os commits de conteúdo do CMS usam, e eles precisam ir ao ar em minutos.
+- **Segredos**: tokens da Cloudflare e do GitHub (fine-grained, escopo mínimo) só em secrets de environment do GitHub (`production`, `preview`, `infra-plan`, `infra`), um token por função e nunca secrets de repositório; jobs que executam código do projeto (build, dependências) não recebem nenhum; nada sensível em `.tfvars` versionado.
 - **Galinha e ovo**: `bootstrap/` roda uma vez localmente para criar o bucket do state e os tokens do CI; depois tudo passa pelo pipeline.
 - **Drift**: `plan` agendado semanal; diferença abre uma issue.
 
@@ -236,8 +237,7 @@ Três camadas de teste e o SonarQube Cloud como portão de qualidade. Mudanças 
 
 | Caminho | `Cache-Control` | Motivo |
 | --- | --- | --- |
-| `/_astro/*` (JS, CSS, imagens com hash) | `public, max-age=31536000, immutable` | Nome muda a cada versão |
-| `/fonts/*` | `public, max-age=31536000, immutable` | Idem |
+| `/_astro/*` (JS, CSS, imagens e fontes com hash; as fontes ficam em `/_astro/fonts/`) | `public, max-age=31536000, immutable` | Nome muda a cada versão |
 | HTML, `rss.xml`, `sitemap*.xml` | `public, max-age=0, must-revalidate` | Sempre a versão atual após deploy |
 | `/pagefind/*` | `public, max-age=3600` | Índice muda a cada build |
 
@@ -303,8 +303,8 @@ Repositório público: tudo no Git é visível (inclusive rascunhos e histórico
 ### Aplicação
 
 - [ ] PAT do Sveltia fine-grained: só este repo, "Contents: read and write", validade de 90 dias
-- [ ] Só variáveis `PUBLIC_` no código do site (Astro 6 embute `import.meta.env` no build)
-- [ ] CSP do Astro 6 com hashes; exceções só para Cloudflare Web Analytics, Giscus e pixels quando ligados
+- [ ] Só variáveis `PUBLIC_` no código do site (Astro 7 embute `import.meta.env` no build). Única exceção: `SHOW_DRAFTS`, definida só no build de preview (nunca na produção) para exibir rascunhos e agendados
+- [ ] CSP do Astro 7 com hashes; exceções só para Cloudflare Web Analytics, Giscus e pixels quando ligados
 - [ ] Headers: HSTS, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`
 - [ ] Endpoints (newsletter): validação, rate limit, Turnstile
 - [ ] EXIF removido das imagens

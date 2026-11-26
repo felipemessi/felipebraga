@@ -1,0 +1,21 @@
+---
+import { DEFAULT_TONE, type Tone } from '../lib/tone';
+
+interface Props {
+  tone?: Tone;
+}
+
+const { tone = DEFAULT_TONE } = Astro.props;
+---
+
+<section data-tone={tone}>
+  <div class="container band-inner">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .band-inner {
+    padding-block: var(--band-y);
+  }
+</style>

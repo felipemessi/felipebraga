@@ -1,0 +1,26 @@
+---
+import avatar from '../assets/felipe-avatar.jpg';
+import Base from '../layouts/Base.astro';
+import { personJsonLd } from '../lib/seo';
+import { SITE } from '../lib/site';
+
+const jsonLd = personJsonLd(
+  Astro.site?.origin ?? 'http://localhost:4321',
+  avatar.src,
+);
+---
+
+<Base description={SITE.tagline} image={avatar.src} {jsonLd}>
+  <Fragment slot="hero">
+    <h1>{SITE.name}</h1>
+    <p class="tagline">{SITE.tagline}</p>
+  </Fragment>
+</Base>
+
+<style>
+  .tagline {
+    margin-top: var(--space-6);
+    max-width: var(--measure);
+    font-size: var(--text-lead);
+  }
+</style>

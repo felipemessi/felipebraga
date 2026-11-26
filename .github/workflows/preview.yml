@@ -1,0 +1,131 @@
+name: Preview
+
+# Uploads a Worker version (never promoted) so each push or PR gets its own
+# URL. Preview builds show drafts and scheduled posts and are never indexed.
+#
+# Two jobs: `build` runs the project's code and dependencies and holds no
+# secret; `upload` holds the preview token and runs no project code beyond
+# installing wrangler (install scripts stay blocked).
+
+on:
+  push:
+    branches: [develop, 'feature/**']
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+# A branch with an open PR fires both events; one group per branch keeps the
+# two runs from racing for the same alias.
+concurrency:
+  group: preview-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SHOW_DRAFTS: 'true'
+      PUBLIC_SITE_URL: ${{ vars.PUBLIC_SITE_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      - name: Mark the preview as noindex
+        run: |
+          printf '\n/*\n  X-Robots-Tag: noindex, nofollow\n' >> dist/_headers
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: preview-dist
+          path: dist
+          if-no-files-found: error
+          retention-days: 1
+
+  upload:
+    needs: build
+    # Fork and Dependabot PRs get no secrets, so there is nothing to upload with.
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: preview
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      BRANCH: ${{ github.head_ref || github.ref_name }}
+    steps:
+      # Until the preview environment has its secrets (infra/README.md), skip with
+      # a warning instead of failing every pull request. deploy.yml has no such
+      # escape: a production deploy without credentials must fail loudly.
+      - name: Check the preview credentials
+        id: creds
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Preview skipped::The preview environment has no CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID yet."
+            echo "Preview skipped: no Cloudflare credentials in the preview environment." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - if: steps.creds.outputs.skip != 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - if: steps.creds.outputs.skip != 'true'
+        uses: ./.github/actions/setup
+      - if: steps.creds.outputs.skip != 'true'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: preview-dist
+          path: dist
+      - name: Upload Worker version
+        id: upload
+        if: steps.creds.outputs.skip != 'true'
+        env:
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.json
+        run: |
+          alias="$(printf '%s' "$BRANCH" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9\n' '-' | cut -c1-40 | sed 's/^-*//; s/-*$//')"
+          log="$RUNNER_TEMP/wrangler.log"
+          # A version can only be uploaded to a Worker that exists, and the Worker
+          # is created by the first production deploy. Skip until then.
+          if ! pnpm exec wrangler versions upload --preview-alias "$alias" > "$log" 2>&1; then
+            cat "$log"
+            if grep -q "does not yet exist" "$log"; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::warning title=Preview skipped::The Worker does not exist yet. Run the first production deploy."
+              echo "Preview skipped: the Worker does not exist until the first production deploy." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            exit 1
+          fi
+          cat "$log"
+          url="$(jq -r 'select(.type == "version-upload") | .preview_alias_url // .preview_url // empty' "$WRANGLER_OUTPUT_FILE_PATH" | tail -n 1)"
+          if [ -z "$url" ]; then
+            echo "wrangler did not report a preview URL" >&2
+            exit 1
+          fi
+          echo "PREVIEW_URL=$url" >> "$GITHUB_ENV"
+          echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
+      - name: Comment the preview URL on the PR
+        if: github.event_name == 'pull_request' && steps.creds.outputs.skip != 'true' && steps.upload.outputs.skip != 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const marker = '<!-- preview-url -->';
+            const body = `${marker}\nPreview: ${process.env.PREVIEW_URL}`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((c) => c.body?.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
