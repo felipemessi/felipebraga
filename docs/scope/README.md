@@ -12,7 +12,7 @@ Milestone 1 gets one real post from the repo to production. Later milestones add
 | 1.3 | Layout shell (tokens, fonts, Band/Header/Footer, base layout, `<SEO>` head) | Planned | — | Design step 1. Header tone matches the opening band |
 | 1.4 | Article page (MDX components: CodeBlock/Shiki, Callout, Figure, Tldr, Table, Footnotes, anchored headings, Toc, reading time) | Planned | — | Design step 2, the most important screen. Mermaid rendered at build time |
 | 1.5 | CI pipeline (`ci.yml`: lint, `astro check`, Vitest coverage, build, link check, Playwright, SonarQube gate) | Planned | — | RN13. Content-only changes skip e2e and Sonar |
-| 1.6 | Infra + deploy (Terraform bootstrap/cloudflare/github, `wrangler.jsonc`, cache/security headers, `deploy.yml`, preview env, Lighthouse CI budgets) | Planned | — | RNF1–RNF4, RNF7–RNF9. Production domain is undecided |
+| 1.6 | Infra + deploy (Terraform bootstrap/cloudflare/github, `wrangler.jsonc`, cache/security headers, `deploy.yml`, preview env, Lighthouse CI budgets) | Built | [spec](../specs/infra-deploy.md) | RNF1–RNF4, RNF7–RNF9. Production domain is undecided: the spec ships on `workers.dev` with the custom domain behind a Terraform variable. Depends on 1.5 for the link check and status check names |
 
 ## Milestone 2 — Read and discover
 | # | Feature | Status | Spec | Notes |
