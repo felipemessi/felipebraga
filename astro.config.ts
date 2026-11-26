@@ -1,9 +1,21 @@
+import { loadEnvFile } from 'node:process';
 import { defineConfig, fontProviders } from 'astro/config';
+import { assertLinksReady } from './src/lib/links';
+import { resolveSiteUrl } from './src/lib/site-url';
 
-const DEV_SITE_URL = 'http://localhost:4321';
+// Astro reads the config before it loads `.env`, so load it here. Variables that
+// are already set (shell, CI) win, and `.env.local` wins over `.env`.
+for (const file of ['.env.local', '.env']) {
+  try {
+    loadEnvFile(file);
+  } catch {
+    // The file is optional.
+  }
+}
 
 // Production domain is undecided (scope 1.6): PUBLIC_SITE_URL swaps it in.
-const site = new URL(process.env['PUBLIC_SITE_URL'] ?? DEV_SITE_URL).origin;
+const site = resolveSiteUrl(process.env['PUBLIC_SITE_URL']);
+assertLinksReady(site);
 
 export default defineConfig({
   site,

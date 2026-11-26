@@ -19,8 +19,10 @@ export function sameAs(): string[] {
   return [LINKS.github, LINKS.linkedin];
 }
 
-export function findPlaceholders(): string[] {
-  return Object.entries(LINKS)
+export function findPlaceholders(
+  links: Readonly<Record<string, string>> = LINKS,
+): string[] {
+  return Object.entries(links)
     .filter(([, value]) => PLACEHOLDER.test(value))
     .map(([key]) => key);
 }
@@ -31,9 +33,12 @@ export function isLocalSite(siteUrl: string): boolean {
 }
 
 /** Throws when a production URL would ship with placeholder links. */
-export function assertLinksReady(siteUrl: string): void {
+export function assertLinksReady(
+  siteUrl: string,
+  links: Readonly<Record<string, string>> = LINKS,
+): void {
   if (isLocalSite(siteUrl)) return;
-  const pending = findPlaceholders();
+  const pending = findPlaceholders(links);
   if (pending.length > 0) {
     throw new Error(
       `Placeholder links left in src/lib/links.ts: ${pending.join(', ')}`,
