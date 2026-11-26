@@ -29,6 +29,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - The gitignore test moved to `tests/config/` and covers `.lighthouseci/`.
 - `.env.example` explains that production uses the `workers.dev` address until the domain is decided.
 - The Lighthouse script budget goes from 0 to 2 KB for the copy button; the home still ships no script.
+- The Lighthouse LCP budget is 2.0 s on `/blog/*` (the home keeps 1.5 s), because web fonts count before a cover image paints in the simulated mobile run; RNF1 in the TRD now says LCP < 2.0 s.
 - New dependencies: `@astrojs/markdown-remark`, `@shikijs/transformers`, `unist-util-visit`, `rehype-mermaid` and `playwright` (pinned to the `@playwright/test` version), plus `@types/hast` and `@fontsource-variable/instrument-sans` for development.
 
 ### Security
