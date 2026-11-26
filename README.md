@@ -35,7 +35,7 @@ pnpm dev
 
 Every push to `main` runs [deploy.yml](.github/workflows/deploy.yml): checks, build, Lighthouse CI, then `wrangler deploy` to Cloudflare Workers Static Assets. Pushes to `develop` and `feature/*` and every PR get a preview through [preview.yml](.github/workflows/preview.yml), which shows drafts and is never indexed.
 
-Production is served from the `workers.dev` address until the custom domain is decided. Record that address here after the first deploy: `https://felipebraga.<account-subdomain>.workers.dev`. The site origin comes from the `PUBLIC_SITE_URL` Actions variable (see [.env.example](.env.example)).
+Production is served at [febraga.dev](https://febraga.dev), through the custom domain managed by Terraform (see [infra/README.md](infra/README.md)). The `workers.dev` address is off for production; only preview URLs use it. The site origin comes from the `PUBLIC_SITE_URL` Actions variable (see [.env.example](.env.example)).
 
 ## License
 

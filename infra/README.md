@@ -33,7 +33,7 @@ The build jobs of `deploy.yml` and `preview.yml` run the project's code and depe
    cd infra/bootstrap
    export CLOUDFLARE_API_TOKEN=<bootstrap token>
    terraform init
-   terraform apply -var account_id=<account id>
+   terraform apply -var account_id=<account id> -var enable_domain_permissions=true
    ```
 
 3. **Check that R2 honours the state lockfile** before trusting it: run `terraform init` and `terraform plan` in `infra/cloudflare` in two terminals at once (with the R2 variables from step 4). The second must fail with a lock error. If it does not, switch the state to HCP Terraform (free tier) and record the change in an ADR.
@@ -49,28 +49,25 @@ The build jobs of `deploy.yml` and `preview.yml` run the project's code and depe
    terraform apply
    ```
 
-5. Set the secrets per environment with the values from the outputs:
+5. Set the secrets per environment. Secrets never go through Terraform, so they stay out of the state: this local script reads the bootstrap outputs and calls `gh secret set`, printing nothing. It asks for `TF_GITHUB_TOKEN` on the terminal.
 
    ```bash
-   gh secret set CLOUDFLARE_API_TOKEN  --env production   # deploy_api_token
-   gh secret set CLOUDFLARE_ACCOUNT_ID --env production
-   gh secret set CLOUDFLARE_API_TOKEN  --env preview      # preview_api_token
-   gh secret set CLOUDFLARE_ACCOUNT_ID --env preview
-   for env in infra-plan infra; do
-     gh secret set CLOUDFLARE_API_TOKEN  --env $env       # infra_api_token
-     gh secret set CLOUDFLARE_ACCOUNT_ID --env $env
-     gh secret set R2_ACCESS_KEY_ID      --env $env       # r2_access_key_id
-     gh secret set R2_SECRET_ACCESS_KEY  --env $env       # r2_secret_access_key
-     gh secret set TF_GITHUB_TOKEN       --env $env
-     gh variable set R2_ENDPOINT         --env $env       # r2_endpoint
-   done
+   cd infra/bootstrap
+   export CLOUDFLARE_ACCOUNT_ID=<account id>
+   ./set-secrets.sh
    ```
 
-6. After the first deploy, put the `workers.dev` address in `infra/github/terraform.tfvars` as `site_url`, and in the root `README.md`.
+6. Run the first deploy (`deploy.yml`, manually or by merging to `main`), then turn on the domain below. Production is [febraga.dev](https://febraga.dev); `site_url` in `infra/github/terraform.tfvars` already holds it.
 
 ### Turning on the custom domain
 
-Set `enable_domain_permissions = true` in `bootstrap/` and apply it, so the infra token can manage the zone, DNS and Worker routes (check the permission group names in the dashboard first). Update the `infra` and `infra-plan` secret with the new token value, then set `domain` in `cloudflare/`. The zone has `prevent_destroy`: setting `domain` back to `null` makes `apply` fail instead of deleting the zone.
+The production domain is `febraga.dev`. The permission group names used for the zone ("Zone Write", "DNS Write", "Workers Routes Write") were checked against the account's permission groups and exist.
+
+1. Create `febraga.dev` as a zone in Cloudflare by Terraform: with `enable_domain_permissions=true` applied in `bootstrap/` (step 2 passes it), set `domain = "febraga.dev"` in `cloudflare/` only **after the first deploy**, because the Worker domain attaches to a Worker that must already exist.
+2. If the domain is registered elsewhere, change its nameservers to the ones Cloudflare shows for the zone. If the zone already exists in Cloudflare, import it first (`terraform import`) or the apply fails.
+3. The zone has `prevent_destroy`: setting `domain` back to `null` makes `apply` fail instead of deleting the zone.
+
+Production has `workers_dev` off in `wrangler.jsonc`. Keep the account's `workers.dev` subdomain enabled (step 1), because preview URLs still use it.
 
 ## Pipeline
 
