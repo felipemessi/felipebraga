@@ -114,6 +114,16 @@ test('AC8: footer sticks to the bottom and keeps 2rem below', async ({
       .locator('footer')
       .evaluate((el) => getComputedStyle(el).paddingBottom);
     expect(padding).toBe('32px');
+
+    // The footer links stay on one row at every width the mockups cover.
+    if (width >= 768) {
+      const tops = await page
+        .locator('footer nav a')
+        .evaluateAll((links) =>
+          links.map((a) => Math.round(a.getBoundingClientRect().top)),
+        );
+      expect(new Set(tops).size).toBe(1);
+    }
   }
 });
 
