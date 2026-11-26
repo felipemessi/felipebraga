@@ -7,6 +7,7 @@ export default defineConfig({
   use: { baseURL: 'http://localhost:4321' },
   webServer: {
     command: 'pnpm build && pnpm preview --ignore-lock',
+    env: { PUBLIC_CONTENT_DIR: 'tests/fixtures/content' },
     url: 'http://localhost:4321',
     reuseExistingServer: !process.env['CI'],
     timeout: 120_000,
