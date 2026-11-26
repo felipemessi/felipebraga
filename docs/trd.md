@@ -160,7 +160,7 @@ infra/
 
 - **State**: backend `s3` apontando para um bucket R2 (compatível com S3), criptografado, um state por pasta. Locking a validar no R2; alternativa: HCP Terraform no plano gratuito.
 - **Versões**: Terraform e providers fixados (`required_version`, `.terraform.lock.hcl` versionado).
-- **Pipeline (`infra.yml`)**: em PR com mudança em `infra/`, roda `fmt -check`, `validate`, `tflint`, `trivy config` e `plan`, com o plano comentado no PR; no merge na `main`, o plano é salvo e um único `apply` o aplica no environment `infra` com aprovação manual. O `production` não tem aprovação: é o que o deploy do site e os commits de conteúdo do CMS usam, e eles precisam ir ao ar em minutos.
+- **Pipeline (`infra.yml`)**: em PR com mudança em `infra/`, roda `fmt -check`, `validate`, `tflint`, `trivy config` e `plan`, com o plano comentado no PR; no merge na `main`, o plano é salvo e um único `apply` o aplica no environment `infra`, sem aprovação manual: o merge é a aprovação, e o plano já foi lido no PR. Nem o `infra` nem o `production` têm aprovação, e os dois só rodam a partir da `main`. O `production` é o que o deploy do site e os commits de conteúdo do CMS usam, e eles precisam ir ao ar em minutos.
 - **Segredos**: tokens da Cloudflare e do GitHub (fine-grained, escopo mínimo) só em secrets de environment do GitHub (`production`, `preview`, `infra-plan`, `infra`), um token por função e nunca secrets de repositório; jobs que executam código do projeto (build, dependências) não recebem nenhum; nada sensível em `.tfvars` versionado.
 - **Galinha e ovo**: `bootstrap/` roda uma vez localmente para criar o bucket do state e os tokens do CI; depois tudo passa pelo pipeline.
 - **Drift**: `plan` agendado semanal; diferença abre uma issue.
