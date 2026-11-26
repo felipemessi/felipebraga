@@ -1,0 +1,6 @@
+# Internal links and anchors only, checked against the built artifact (dist/).
+offline = true
+root_dir = "dist"
+include_fragments = true
+fallback_extensions = ["html"]
+no_progress = true
