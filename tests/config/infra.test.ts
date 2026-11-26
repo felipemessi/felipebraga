@@ -515,6 +515,15 @@ describe('infra and deploy: terraform roots', () => {
     }
   });
 
+  it('AC9: sets the production domain and adopts the zone that already exists', () => {
+    expect(read('infra/cloudflare/terraform.tfvars')).toMatch(
+      /^domain\s*=\s*"febraga\.dev"/m,
+    );
+    const imports = read('infra/cloudflare/import.tf');
+    expect(imports).toMatch(/to\s*=\s*cloudflare_zone\.site\[0\]/);
+    expect(imports).toMatch(/id\s*=\s*"[0-9a-f]{32}"/);
+  });
+
   it('AC9: refuses to delete the zone when the domain is switched off', () => {
     const zone =
       /resource "cloudflare_zone" "site" \{[\s\S]*?\n\}/.exec(
