@@ -15,12 +15,12 @@ Terraform `~> 1.10` is required (native S3 lockfile). Providers are pinned in `v
 
 Every secret is an **environment** secret, never a repository one, so a workflow on an arbitrary branch cannot read it. `production` only runs from `main`.
 
-| Environment  | Used by                                        | Secrets                                                                                                                                              |
-| ------------ | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `production` | `deploy.yml`, deploy job (`main` only)         | `CLOUDFLARE_API_TOKEN` (deploy token), `CLOUDFLARE_ACCOUNT_ID`                                                                                       |
-| `preview`    | `preview.yml`, upload job                      | `CLOUDFLARE_API_TOKEN` (preview token), `CLOUDFLARE_ACCOUNT_ID`                                                                                      |
-| `infra-plan` | `infra.yml` plans and the weekly drift check   | `CLOUDFLARE_API_TOKEN` (infra token), `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `TF_GITHUB_TOKEN`; variable `R2_ENDPOINT` |
-| `infra`      | `infra.yml` apply, behind the owner's approval | The same as `infra-plan`                                                                                                                             |
+| Environment  | Used by                                         | Secrets                                                                                                                                              |
+| ------------ | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `production` | `deploy.yml`, deploy job (`main` only)          | `CLOUDFLARE_API_TOKEN` (deploy token), `CLOUDFLARE_ACCOUNT_ID`                                                                                       |
+| `preview`    | `preview.yml`, upload job                       | `CLOUDFLARE_API_TOKEN` (preview token), `CLOUDFLARE_ACCOUNT_ID`                                                                                      |
+| `infra-plan` | `infra.yml` plans and the weekly drift check    | `CLOUDFLARE_API_TOKEN` (infra token), `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `TF_GITHUB_TOKEN`; variable `R2_ENDPOINT` |
+| `infra`      | `infra.yml` apply, on `main` (merge = approval) | The same as `infra-plan`                                                                                                                             |
 
 The build jobs of `deploy.yml` and `preview.yml` run the project's code and dependencies and hold no secret. Pull requests from forks and Dependabot get no secrets, and the jobs that need them are skipped for those PRs.
 
@@ -74,11 +74,11 @@ Production has `workers_dev` off in `wrangler.jsonc`. Keep the account's `worker
 
 ## Pipeline
 
-[infra.yml](../.github/workflows/infra.yml) checks every root (`fmt`, `validate`, `tflint`, `trivy config`) and posts a plan on each same-repository PR that touches `infra/`. A merge to `main` saves each plan as a one-day artifact (it holds no secret) and the `apply` job applies those exact plans after one approval in the `infra` environment: read the _plan_ job summaries before approving. A weekly plan opens an issue when it finds drift and closes it when the plan is clean again.
+[infra.yml](../.github/workflows/infra.yml) checks every root (`fmt`, `validate`, `tflint`, `trivy config`) and posts a plan on each same-repository PR that touches `infra/`. A merge to `main` saves each plan as a one-day artifact (it holds no secret) and the `apply` job applies those exact plans with no manual step: the merge is the approval, so read the plan comment on the pull request before merging. A weekly plan opens an issue when it finds drift and closes it when the plan is clean again.
 
 Until the secrets exist (and, for previews, until the first production deploy has created the Worker), `preview.yml` skips its upload and `infra.yml` skips its plan and apply, each with a warning, so pull requests stay green during the one-time setup. `deploy.yml` has no such escape: a production deploy without credentials fails.
 
-The `production` environment has no required reviewer on purpose: CMS content commits use it, and they must go live in minutes. Only infra applies wait for approval.
+Neither the `production` nor the `infra` environment has a required reviewer: CMS content commits use `production` and must go live in minutes, and infra applies follow the same rule that a merge to `main` is the approval. Both environments only run from `main`.
 
 ## Local checks
 

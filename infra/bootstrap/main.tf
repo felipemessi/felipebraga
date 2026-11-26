@@ -89,9 +89,12 @@ resource "cloudflare_account_token" "infra" {
   policies = concat(
     [{
       effect = "allow"
-      permission_groups = [
-        { id = data.cloudflare_account_api_token_permission_groups_list.r2_storage_write.result[0].id },
-      ]
+      permission_groups = concat(
+        [{ id = data.cloudflare_account_api_token_permission_groups_list.r2_storage_write.result[0].id }],
+        # A Worker custom domain is an account-level resource (PUT /workers/domains),
+        # so the zone permissions alone end in 403 Authentication error.
+        var.enable_domain_permissions ? [{ id = data.cloudflare_account_api_token_permission_groups_list.workers_scripts_write.result[0].id }] : [],
+      )
       resources = local.account_scope
     }],
     var.enable_domain_permissions ? [{

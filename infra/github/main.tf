@@ -83,10 +83,9 @@ resource "github_repository_environment" "infra" {
   repository  = github_repository.site.name
   environment = "infra"
 
-  reviewers {
-    users = [var.owner_user_id]
-  }
-
+  # No required reviewer: merging to main is the approval. The plan already ran
+  # on the pull request, and the apply runs the plan saved by the merge run. The
+  # environment still limits the apply (and its secrets) to the main branch.
   deployment_branch_policy {
     protected_branches     = false
     custom_branch_policies = true
