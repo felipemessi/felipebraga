@@ -1,5 +1,5 @@
 # Infra + deploy
-Status: In Progress
+Status: Accepted
 Scope: 1.6
 
 ## Requirements
