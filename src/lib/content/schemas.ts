@@ -20,6 +20,9 @@ export interface EntryRef {
   id: string;
 }
 
+// A blank YAML value is null, and z.coerce.date() would turn it into 1970-01-01.
+const date = z.union([z.date(), z.string().min(1)]).pipe(z.coerce.date());
+
 const title = z.string().trim().min(1).max(70);
 const description = z.string().trim().min(50).max(160);
 
@@ -28,8 +31,8 @@ export function postSchema({ image, reference }: SchemaHelpers) {
     .object({
       title,
       description,
-      publishDate: z.coerce.date(),
-      updatedDate: z.coerce.date().optional(),
+      publishDate: date,
+      updatedDate: date.optional(),
       draft: z.boolean().default(false),
       tags: z.array(reference('tags')).min(1),
       series: reference('series').optional(),
@@ -95,7 +98,7 @@ export function pageSchema() {
   return z.object({
     title,
     description,
-    updatedDate: z.coerce.date().optional(),
+    updatedDate: date.optional(),
     draft: z.boolean().default(false),
   });
 }

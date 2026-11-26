@@ -45,6 +45,28 @@ describe('AC2-AC5: postSchema', () => {
     expect(a.getTime()).toBe(b.getTime());
   });
 
+  it.each([
+    ['null (a blank YAML value)', null],
+    ['an empty string', ''],
+    ['a number', 0],
+    ['a boolean', true],
+  ])('rejects publishDate and updatedDate set to %s', (_label, value) => {
+    expect(issuePaths({ ...valid, publishDate: value })).toContain(
+      'publishDate',
+    );
+    expect(issuePaths({ ...valid, updatedDate: value })).toContain(
+      'updatedDate',
+    );
+  });
+
+  it('accepts a Date object, as YAML produces for an unquoted timestamp', () => {
+    const result = post.parse({
+      ...valid,
+      publishDate: new Date('2026-12-01T12:00:00Z'),
+    });
+    expect(result.publishDate.toISOString()).toBe('2026-12-01T12:00:00.000Z');
+  });
+
   it('accepts every optional field', () => {
     const result = post.safeParse({
       ...valid,
@@ -159,6 +181,12 @@ describe('AC7: pageSchema', () => {
 
   it('accepts a page and defaults draft to false', () => {
     expect(pageSchema().parse(page).draft).toBe(false);
+  });
+
+  it('rejects a blank updatedDate on a page', () => {
+    expect(pageSchema().safeParse({ ...page, updatedDate: null }).success).toBe(
+      false,
+    );
   });
 
   it('applies the title and description limits', () => {

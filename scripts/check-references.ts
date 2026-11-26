@@ -1,57 +1,63 @@
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { parse } from 'yaml';
 import { resolveContentDir } from '../src/lib/content/dir.ts';
+import { idFromFile, invalidIdProblems } from '../src/lib/content/ids.ts';
 import {
   findBrokenReferences,
+  parsePostReferences,
   type PostReferences,
 } from '../src/lib/content/references.ts';
 
-function entryIds(dir: string, extension: string): Set<string> {
+function fileIds(dir: string, extension: string): Set<string> {
   if (!existsSync(dir)) return new Set();
   return new Set(
     readdirSync(dir)
       .filter((file) => file.endsWith(extension))
-      .map((file) => file.slice(0, -extension.length)),
+      .map((file) => idFromFile(file)),
   );
 }
 
-function readFrontmatter(file: string): Record<string, unknown> {
-  const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(readFileSync(file, 'utf8'));
-  const data: unknown = match?.[1] === undefined ? {} : parse(match[1]);
-  return typeof data === 'object' && data !== null
-    ? (data as Record<string, unknown>)
-    : {};
-}
-
-function readPosts(dir: string): PostReferences[] {
-  if (!existsSync(dir)) return [];
+function readPosts(dir: string): {
+  posts: PostReferences[];
+  problems: string[];
+} {
   const posts: PostReferences[] = [];
+  const problems: string[] = [];
+  if (!existsSync(dir)) return { posts, problems };
   for (const slug of readdirSync(dir, { withFileTypes: true })) {
     if (!slug.isDirectory()) continue;
-    const file = ['index.md', 'index.mdx']
+    const files = ['index.md', 'index.mdx']
       .map((name) => join(dir, slug.name, name))
-      .find((candidate) => existsSync(candidate));
-    if (file === undefined) continue;
-    const data = readFrontmatter(file);
-    posts.push({
-      id: slug.name,
-      tags: Array.isArray(data['tags']) ? data['tags'].map(String) : [],
-      series: typeof data['series'] === 'string' ? data['series'] : undefined,
-    });
+      .filter((candidate) => existsSync(candidate));
+    for (const file of files) {
+      const parsed = parsePostReferences(slug.name, readFileSync(file, 'utf8'));
+      if (parsed.references) posts.push(parsed.references);
+      else problems.push(parsed.problem);
+    }
   }
-  return posts;
+  return { posts, problems };
 }
 
 const base = resolveContentDir(process.env);
-const problems = findBrokenReferences(
-  readPosts(join(base, 'posts')),
-  entryIds(join(base, 'tags'), '.yaml'),
-  entryIds(join(base, 'series'), '.yaml'),
-);
+const tagIds = fileIds(join(base, 'tags'), '.yaml');
+const seriesIds = fileIds(join(base, 'series'), '.yaml');
+const pageIds = fileIds(join(base, 'pages'), '.md');
+const { posts, problems: postProblems } = readPosts(join(base, 'posts'));
+
+const problems = [
+  ...invalidIdProblems(
+    'posts',
+    posts.map((post) => post.id),
+  ),
+  ...invalidIdProblems('tags', tagIds),
+  ...invalidIdProblems('series', seriesIds),
+  ...invalidIdProblems('pages', pageIds),
+  ...postProblems,
+  ...findBrokenReferences(posts, tagIds, seriesIds),
+];
 
 if (problems.length > 0) {
-  console.error(`Broken content references in ${base}:`);
+  console.error(`Broken content in ${base}:`);
   for (const problem of problems) console.error(`  - ${problem}`);
   process.exit(1);
 }

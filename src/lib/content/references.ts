@@ -1,7 +1,45 @@
+import { parse } from 'yaml';
+
 export interface PostReferences {
   id: string;
   tags: readonly string[];
   series?: string | undefined;
+}
+
+export type ParsedPost =
+  | { references: PostReferences; problem?: undefined }
+  | { references?: undefined; problem: string };
+
+const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---/;
+
+export function parsePostReferences(id: string, source: string): ParsedPost {
+  const text = source.startsWith('﻿') ? source.slice(1) : source;
+  const block = FRONTMATTER.exec(text)?.[1];
+  if (block === undefined) {
+    return { problem: `posts/${id}: missing frontmatter` };
+  }
+  let data: unknown;
+  try {
+    data = parse(block);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    return {
+      problem: `posts/${id}: invalid frontmatter (${reason.split('\n')[0] ?? reason})`,
+    };
+  }
+  const record =
+    typeof data === 'object' && data !== null
+      ? (data as Record<string, unknown>)
+      : {};
+  const tags = record['tags'];
+  const series = record['series'];
+  return {
+    references: {
+      id,
+      tags: Array.isArray(tags) ? tags.map(String) : [],
+      series: typeof series === 'string' ? series : undefined,
+    },
+  };
 }
 
 export function findBrokenReferences(

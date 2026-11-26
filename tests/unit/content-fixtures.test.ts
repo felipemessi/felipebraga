@@ -1,5 +1,13 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -76,6 +84,19 @@ describe('AC10: fixtures cover every post kind', () => {
   });
 });
 
+function contentDir(files: Record<string, string>): string {
+  const dir = mkdtempSync(join(tmpdir(), 'content-'));
+  for (const [path, text] of Object.entries(files)) {
+    mkdirSync(join(dir, path, '..'), { recursive: true });
+    writeFileSync(join(dir, path), text);
+  }
+  return dir;
+}
+
+const TAG = 'name: DevOps\ndescription: Tag.\n';
+const POST = (tags: string, prefix = '') =>
+  `${prefix}---\ntitle: x\ntags: [${tags}]\n---\n`;
+
 describe('AC6: the reference check fails on a dangling reference', () => {
   const script = ['scripts/check-references.ts'];
 
@@ -92,6 +113,67 @@ describe('AC6: the reference check fails on a dangling reference', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('posts/ruim');
     expect(result.stderr).toContain('"nao-existe"');
+  });
+
+  it('still checks a file that starts with a byte order mark', () => {
+    const dir = contentDir({
+      'tags/devops.yaml': TAG,
+      'posts/x/index.md': POST('ghost', '\uFEFF'),
+    });
+    const result = run(script, dir);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('"ghost"');
+  });
+
+  it('fails on a post file without frontmatter', () => {
+    const dir = contentDir({
+      'tags/devops.yaml': TAG,
+      'posts/x/index.md': 'no frontmatter here\n',
+    });
+    const result = run(script, dir);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('posts/x: missing frontmatter');
+  });
+
+  it('rejects a tag file whose id is not lowercase kebab-case', () => {
+    const dir = contentDir({
+      'tags/DevOps.yaml': TAG,
+      'posts/x/index.md': POST('DevOps'),
+    });
+    const result = run(script, dir);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('tags/DevOps: id must be lowercase');
+  });
+
+  it('accepts a valid lowercase tag and post', () => {
+    const dir = contentDir({
+      'tags/devops.yaml': TAG,
+      'posts/x/index.md': POST('devops'),
+    });
+    expect(run(script, dir).status).toBe(0);
+  });
+});
+
+describe('AC6: pnpm build runs the reference check first', () => {
+  it('wires the check as the prebuild script', () => {
+    const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
+      scripts: Record<string, string>;
+    };
+    expect(pkg.scripts['prebuild']).toBe('node scripts/check-references.ts');
+  });
+
+  it('makes pnpm build exit non-zero on a dangling reference', () => {
+    const result = spawnSync('pnpm', ['build'], {
+      env: {
+        ...process.env,
+        PUBLIC_CONTENT_DIR: join(INVALID, 'tag-inexistente'),
+      },
+      encoding: 'utf8',
+    });
+    expect(result.status).not.toBe(0);
+    expect(result.stdout + result.stderr).toContain(
+      'tag "nao-existe" does not exist',
+    );
   });
 });
 
