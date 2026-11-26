@@ -1,5 +1,5 @@
 # CI pipeline
-Status: Proposed
+Status: In Progress
 Scope: 1.5
 
 ## Requirements
@@ -11,7 +11,7 @@ Scope: 1.5
 - Sonar exclusions (TRD): `docs/`, `design/`, `infra/`, `src/content/`, `tests/fixtures/`, `public/admin/`.
 
 ## Acceptance criteria
-1. AC1: `.github/workflows/ci.yml` runs on `pull_request` (to `develop` and `main`) and on `push` to `develop`. Top-level `permissions: contents: read`; no job widens it except Sonar's `pull-requests: read` if the action needs it. Every third-party action is pinned by full commit SHA with the version in a comment. Concurrency cancels superseded runs of the same ref.
+1. AC1: `.github/workflows/ci.yml` runs on `pull_request` (to `develop` and `main`) and on `push` to `develop`. Top-level `permissions: contents: read`; only the `changes` job widens it, with `pull-requests: read`, which the path filter needs on `pull_request` events. Every third-party action is pinned by full commit SHA with the version in a comment. Concurrency cancels superseded runs of the same ref.
 2. AC2: A `changes` job classifies the diff and outputs `code`. `code` is false only when every changed file is under `src/content/posts/**`. Anything else (including `package.json`, workflows, `src/`, `tests/`, `public/`) counts as code.
 3. AC3: A `verify` job (always runs) does checkout, `pnpm/action-setup` (version from `packageManager`), `actions/setup-node` with `node-version-file: .nvmrc` and the pnpm store cache, then `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm check`, `pnpm test:coverage` and `pnpm build`.
 4. AC4: The link check runs in `verify` after the build: lychee in `--offline` mode over `dist/`, failing on any broken internal link or anchor, with its action pinned by SHA. Configuration lives in `lychee.toml`.
@@ -43,6 +43,8 @@ lychee.toml
 sonar-project.properties
 ```
 
+Fix made while building: `tests/unit/repo-config.test.ts` (AC12 of the scaffold) asked `git check-ignore` about bare directory names, which only matches when the directory already exists. A clean CI checkout has no `dist/` or `coverage/` when Vitest runs, so `verify` would fail. The test now checks `<dir>/x`.
+
 Job graph: `changes` → (`verify`, `e2e`*, `sonar`*) → `ci-gate`. `*` = only when `code` is true. `sonar` also needs `verify` for the coverage artifact.
 
 Sonar identifiers: project key `felipemessi_felipebraga` (from the project URL, `sonarcloud.io/project/overview?id=felipemessi_felipebraga`). The organization key is not in that URL; SonarQube Cloud keys follow `<organization>_<repo>`, so `sonar.organization=felipemessi` is assumed and must be confirmed on the first run. `SONAR_TOKEN` is already in GitHub Secrets.
@@ -54,15 +56,15 @@ Manual steps for the author (cannot be done from the repo):
 Data/routes: none.
 
 ## Build plan
-1. Add `sonar-project.properties` and `lychee.toml` — AC4, AC6
-2. Write `ci.yml`: triggers, permissions, concurrency, `changes` job — AC1, AC2
-3. Add the `verify` job: install, lint, check, coverage, build, lychee — AC3, AC4
-4. Add `e2e` with Playwright browser cache and failure artifact — AC5
-5. Add `sonar` with coverage artifact handoff and quality gate wait — AC6
-6. Add `ci-gate` — AC7
-7. Add `.github/dependabot.yml` — AC8
-8. Validate on a throwaway PR: one failure per stage, plus a content-only PR — AC9
-9. Update `AGENTS.md` (Stack, Structure) — AC10
+1. [x] Add `sonar-project.properties` and `lychee.toml` — AC4, AC6
+2. [x] Write `ci.yml`: triggers, permissions, concurrency, `changes` job — AC1, AC2
+3. [x] Add the `verify` job: install, lint, check, coverage, build, lychee — AC3, AC4
+4. [x] Add `e2e` with Playwright browser cache and failure artifact — AC5
+5. [x] Add `sonar` with coverage artifact handoff and quality gate wait — AC6
+6. [x] Add `ci-gate` — AC7
+7. [x] Add `.github/dependabot.yml` — AC8
+8. [ ] Validate on a throwaway PR: one failure per stage, plus a content-only PR — AC9 (needs GitHub; lychee has not run locally either)
+9. [x] Update `AGENTS.md` (Stack, Structure) — AC10
 
 ## Alternatives
 - Workflow-level `paths-ignore`: rejected, blocks required checks on skipped runs.
