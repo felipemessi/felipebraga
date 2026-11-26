@@ -1,0 +1,3 @@
+# The repository is public on purpose: the code is a showcase (PRD objective 7)
+# and is licensed Apache-2.0. Secrets stay in GitHub Secrets, never in Git.
+AVD-GIT-0001
