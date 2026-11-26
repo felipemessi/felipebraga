@@ -23,11 +23,18 @@ export interface SeoMeta {
   alternates: { type: string; title: string; href: string }[];
 }
 
+// A loop instead of /\/+$/, which backtracks in quadratic time on long runs of slashes.
+function trimTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47) end -= 1;
+  return value.slice(0, end);
+}
+
 export function absoluteUrl(site: string, path: string): string {
   if (/^https?:\/\//i.test(path)) return path;
   const origin = new URL(site).origin;
   // `build.format: 'file'` exposes `/index.html` and `/x.html` as pathnames.
-  const clean = path.replace(/(\/index)?\.html$/, '').replace(/\/+$/, '');
+  const clean = trimTrailingSlashes(path.replace(/(\/index)?\.html$/, ''));
   return clean === '' || clean === '/'
     ? origin
     : `${origin}${clean.startsWith('/') ? '' : '/'}${clean}`;

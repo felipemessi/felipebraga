@@ -15,6 +15,9 @@ describe('seo', () => {
     expect(absoluteUrl(site, 'blog')).toBe(`${site}/blog`);
     expect(absoluteUrl(site, '/index.html')).toBe(site);
     expect(absoluteUrl(site, '/blog/x.html')).toBe(`${site}/blog/x`);
+    expect(absoluteUrl(site, '/blog///')).toBe(`${site}/blog`);
+    expect(absoluteUrl(site, '///')).toBe(site);
+    expect(absoluteUrl(site, `/a${'/'.repeat(50_000)}`)).toBe(`${site}/a`);
   });
 
   it('AC10: keeps absolute URLs untouched', () => {
