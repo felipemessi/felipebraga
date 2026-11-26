@@ -11,9 +11,11 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/check-references.ts",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "prelint": "astro sync",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "test": "vitest run",
@@ -21,7 +23,9 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "astro": "^7.4.13"
+    "@astrojs/mdx": "^8.1.6",
+    "astro": "^7.4.13",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",

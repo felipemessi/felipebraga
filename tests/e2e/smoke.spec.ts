@@ -8,8 +8,12 @@ test('AC5/AC10: home is well formed, script-free and accessible', async ({
 
   await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR');
   await expect(page.locator('h1')).toHaveCount(1);
-  await expect(page.locator('script')).toHaveCount(0);
-  await expect(page.getByText('DevOps em um mundo com IA')).toBeVisible();
+  await expect(
+    page.locator('script:not([type="application/ld+json"])'),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('main').getByText('DevOps em um mundo com IA'),
+  ).toBeVisible();
 
   const { violations } = await new AxeBuilder({ page }).analyze();
   const blocking = violations.filter(
