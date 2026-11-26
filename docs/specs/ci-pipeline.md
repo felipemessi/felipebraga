@@ -57,6 +57,8 @@ Sonar: project key `felipemessi_felipebraga`, organization `felipemessi`, `SONAR
 
 The manual steps (automatic analysis off, `ci-gate` required) are done.
 
+Still manual: add `SONAR_TOKEN` as a Dependabot secret (Settings → Secrets and variables → Dependabot). Dependabot runs do not receive Actions secrets, so without it every Dependabot PR fails `sonar` and `ci-gate`. Fork PRs have the same limit and are handled by the owner. Review findings and fixes: [docs/reviews/2026-11-26-feature-ci-pipeline.md](../reviews/2026-11-26-feature-ci-pipeline.md).
+
 Data/routes: none.
 
 ## Verification (AC9, PR #3 and throwaway PRs, 2026-11-26)
