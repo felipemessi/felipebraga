@@ -27,7 +27,7 @@ The package manager is pnpm (never npm or yarn). Node 26 doesn't ship Corepack, 
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` | Dev server at `localhost:4321` |
-| `pnpm build` | Static build into `dist/`. `prebuild` runs `scripts/check-references.ts` first and exits 1 on a tag or series that does not exist (Astro 7 only logs it and exits 0) |
+| `pnpm build` | Static build into `dist/`. `prebuild` runs `scripts/check-references.ts` first and exits 1 on a tag or series that does not exist, an id that is not lowercase kebab-case, a post with no frontmatter, or both `index.md` and `index.mdx` in one folder (Astro 7 only logs a dangling reference and exits 0) |
 | `pnpm preview` | Serves `dist/`. Astro backgrounds it when it detects an AI agent; use `astro preview stop` to stop it, or `--ignore-lock` for a foreground server |
 | `pnpm check` | `astro check` (types and schemas) |
 | `pnpm lint` | `eslint .` and `prettier --check .` |
@@ -49,7 +49,7 @@ design/                mockups (telas/*.dc.html), tokens.css, assets/ — visual
 docs/                  prd.md, trd.md (Portuguese), scope/, specs/
 src/content/           real posts, tags, series, pages (empty for now)
 src/content.config.ts  collections and glob loaders only; rules live in src/lib/content/
-src/lib/               logic in .ts (site.ts, content/: schemas, visibility, references, dir)
+src/lib/               logic in .ts (site.ts, content/: schemas, visibility, references, ids, dir)
 scripts/               build-time scripts run with Node's native TypeScript (check-references.ts)
 src/pages/             routes (placeholder index.astro)
 tests/unit/            Vitest (see tests/AGENTS.md)
@@ -66,7 +66,7 @@ Planned layout: the TRD's "Estrutura do repositório" section (`content/`, `comp
 - English for code, commits, branches and workflow docs. Portuguese only for the PRD, the TRD, `docs/adr/` and blog content, including posts and site UI copy (RN5).
 - Logic goes in `.ts` files (`src/lib`), and `.astro` files contain markup only, because Sonar does not analyze `.astro`.
 - Site code reads only `PUBLIC_` env vars. `PUBLIC_CONTENT_DIR` picks the content dir (default `src/content`); the e2e run sets it to `tests/fixtures/content`.
-- Every content id is lowercase kebab-case, and `prebuild` fails otherwise: the post slug is the folder name under `posts/`, and tag, series and page ids are the file name without the extension; `sectionColor` values are the ASCII `data-tone` ids from `design/tokens.css`. `publishDate` is written as ISO 8601 with an offset (YAML parses it before Zod, so the zone is not validated). A `:` inside a frontmatter value needs quotes. Pages ship zero JS by default, and an island is added only where it is needed.
+- Every content id is lowercase kebab-case, and `prebuild` fails otherwise: the post slug is the folder name under `posts/`, and tag, series and page ids are the file name without the extension; `sectionColor` values are the ASCII `data-tone` ids from `design/tokens.css`. `publishDate` and `updatedDate` are an ISO date or an ISO datetime with an offset and seconds (`2026-12-01T09:00:00-03:00`); anything looser fails the build. A `:` inside a frontmatter value needs quotes. Pages ship zero JS by default, and an island is added only where it is needed.
 - E2E tests run on `tests/fixtures/content`, never on real posts.
 - Git flow: `feature/*` branches off `develop` and `hotfix/*` off `main`. `main` is production. Commits follow Conventional Commits (skills `branch` and `commit`). Before creating a branch, fetch and fast-forward local `develop` to `origin/develop`.
 - No co-author or tool attribution in commits or PRs.

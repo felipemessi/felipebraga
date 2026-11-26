@@ -13,7 +13,7 @@ Run from the repo root on Node 26 (`pnpm install --frozen-lockfile` first). Spec
 | AC8, AC9 | `pnpm test` | `tests/unit/visibility.test.ts` passes |
 | AC10 | `pnpm test:e2e` | 4 tests pass; the web server log shows `check-references` then `astro build` |
 | AC11 | Run the three invalid builds above | Each exits non-zero for its own rule, not for a YAML parse error |
-| AC12 | `pnpm test:coverage` | All tests pass; gate at 80% is met (100% today) |
+| AC12 | `pnpm test:coverage` | All tests pass; gate at 80% is met (100% statements, lines and functions, about 97% branches today) |
 | AC13 | `pnpm build` with no env var | Exit 0 with the empty `src/content/` |
 | Static | `pnpm check` and `pnpm lint` | 0 errors, 0 warnings |
 
