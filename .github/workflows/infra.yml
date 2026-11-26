@@ -75,13 +75,45 @@ jobs:
           exit-code: '1'
           trivyignores: infra/.trivyignore
 
-  plan:
+  # Until the one-time setup in infra/README.md has put the secrets in the
+  # infra-plan environment, plan and apply are skipped with a warning instead of
+  # failing every pull request. This job runs no project code and checks out nothing.
+  credentials:
     if: >-
       github.event_name != 'schedule' &&
       (github.event_name != 'pull_request' ||
       (github.event.pull_request.head.repo.full_name == github.repository &&
       github.actor != 'dependabot[bot]'))
-    needs: [static, trivy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: infra-plan
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    env:
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      TF_GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN }}
+      R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+    steps:
+      - id: check
+        run: |
+          missing=""
+          for name in R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID TF_GITHUB_TOKEN R2_ENDPOINT; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Terraform plan skipped::The infra-plan environment is missing:$missing"
+            echo "Terraform plan skipped, missing in infra-plan:$missing" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  plan:
+    if: needs.credentials.outputs.ready == 'true'
+    needs: [static, trivy, credentials]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: infra-plan

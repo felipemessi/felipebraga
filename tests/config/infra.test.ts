@@ -312,11 +312,35 @@ describe('infra and deploy: workflows', () => {
     });
 
     it('AC11/AC12: skips fork and Dependabot PRs for the plan', () => {
-      const plan = job('infra', 'plan');
-      expect(plan).toContain(
+      const credentials = job('infra', 'credentials');
+      expect(credentials).toContain(
         'github.event.pull_request.head.repo.full_name == github.repository',
       );
-      expect(plan).toContain("github.actor != 'dependabot[bot]'");
+      expect(credentials).toContain("github.actor != 'dependabot[bot]'");
+      const plan = job('infra', 'plan');
+      expect(plan).toMatch(/needs: \[[^\]]*credentials[^\]]*\]/);
+      expect(plan).toContain("needs.credentials.outputs.ready == 'true'");
+    });
+
+    it('AC11: skips plan and apply with a warning while the infra-plan secrets are missing', () => {
+      const credentials = job('infra', 'credentials');
+      expect(credentials).toMatch(/environment: infra-plan/);
+      expect(credentials).toContain('::warning title=Terraform plan skipped::');
+      // It only reads the secrets: no checkout, no Terraform, no project code.
+      expect(credentials).not.toContain('actions/checkout');
+      expect(credentials).not.toContain('terraform');
+      for (const name of [
+        'R2_ACCESS_KEY_ID',
+        'R2_SECRET_ACCESS_KEY',
+        'CLOUDFLARE_API_TOKEN',
+        'CLOUDFLARE_ACCOUNT_ID',
+        'TF_GITHUB_TOKEN',
+        'R2_ENDPOINT',
+      ]) {
+        expect(credentials, name).toContain(name);
+      }
+      // apply needs plan, so it is skipped too and never runs without a plan.
+      expect(job('infra', 'apply')).toMatch(/needs: plan/);
     });
 
     it('AC11: applies the saved plan, not a fresh one, and asks for one approval', () => {
