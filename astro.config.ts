@@ -1,4 +1,5 @@
 import { loadEnvFile } from 'node:process';
+import mdx from '@astrojs/mdx';
 import { defineConfig, fontProviders } from 'astro/config';
 import { assertLinksReady } from './src/lib/links';
 import { resolveSiteUrl } from './src/lib/site-url';
@@ -62,4 +63,5 @@ export default defineConfig({
       fallbacks: ['ui-monospace', 'monospace'],
     },
   ],
+  integrations: [mdx()],
 });
