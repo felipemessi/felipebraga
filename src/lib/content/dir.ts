@@ -5,5 +5,7 @@ export function resolveContentDir(
 ): string {
   const value = env['PUBLIC_CONTENT_DIR']?.trim();
   if (!value) return DEFAULT_CONTENT_DIR;
-  return value.replace(/\/+$/, '');
+  let end = value.length;
+  while (end > 0 && value[end - 1] === '/') end -= 1;
+  return value.slice(0, end);
 }
