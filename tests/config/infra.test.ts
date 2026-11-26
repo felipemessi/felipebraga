@@ -121,8 +121,8 @@ describe('infra and deploy: lighthouse budgets', () => {
     ]);
   });
 
-  it('AC6: keeps SEO as a warning until 1.3 adds <SEO>', () => {
-    expect(a['categories:seo']).toEqual(['warn', { minScore: 1 }]);
+  it('AC6: fails the build when SEO drops below 1.0', () => {
+    expect(a['categories:seo']).toEqual(['error', { minScore: 1 }]);
   });
 
   it('AC6: enforces the Core Web Vitals budgets', () => {
@@ -220,6 +220,11 @@ describe('infra and deploy: workflows', () => {
       expect(positions.every((p) => p > -1)).toBe(true);
       expect([...positions].sort((x, y) => x - y)).toEqual(positions);
       expect(build).toContain('uses: ./.github/actions/setup');
+      const lychee = build.indexOf('lycheeverse/lychee-action@');
+      expect(lychee).toBeGreaterThan(build.indexOf('run: pnpm build'));
+      expect(lychee).toBeLessThan(build.indexOf('run: pnpm lighthouse'));
+      expect(build).toContain('--config lychee.toml');
+      expect(build).toContain('fail: true');
       expect(read('.github/actions/setup/action.yml')).toContain(
         'pnpm install --frozen-lockfile',
       );
@@ -488,10 +493,14 @@ describe('infra and deploy: terraform roots', () => {
     expect(main).toMatch(/"production_main" \{[^}]*branch_pattern = "main"/s);
   });
 
-  it('AC10: takes required status checks from a variable, empty by default', () => {
+  it('AC10: takes required status checks from a variable, set to the ci-gate job', () => {
     expect(read('infra/github/variables.tf')).toMatch(
       /variable "required_status_checks" \{[^}]*default\s+= \[\]/s,
     );
+    expect(read('infra/github/terraform.tfvars')).toContain(
+      'required_status_checks = ["ci-gate"]',
+    );
+    expect(read('.github/workflows/ci.yml')).toMatch(/^ {2}ci-gate:$/m);
   });
 
   it('AC10/AC12: keeps secret values out of Terraform and its tfvars', () => {
