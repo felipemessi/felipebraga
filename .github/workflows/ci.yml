@@ -54,6 +54,8 @@ jobs:
         with:
           args: --config lychee.toml --root-dir ${{ github.workspace }}/dist dist
           fail: true
+          # The placeholder home has no links yet; drop this once real pages exist.
+          failIfEmpty: false
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage
