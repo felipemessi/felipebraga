@@ -108,6 +108,13 @@ describe('AC6: parsePostReferences', () => {
     });
   });
 
+  it('resolves YAML merge keys the way Astro does', () => {
+    const source = '---\nbase: &b { tags: [ghost] }\n<<: *b\n---\n';
+    expect(parsePostReferences('a', source).references?.tags).toEqual([
+      'ghost',
+    ]);
+  });
+
   it('reads the object form of a reference', () => {
     const source =
       '---\ntags:\n  - { collection: tags, id: devops }\n  - ia\nseries: { collection: series, id: agentes }\n---\n';

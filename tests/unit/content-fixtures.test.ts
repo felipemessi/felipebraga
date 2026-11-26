@@ -5,11 +5,13 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 const FIXTURES = 'tests/fixtures/content';
 const INVALID = 'tests/fixtures/invalid';
@@ -90,8 +92,20 @@ function withoutContentDir(): NodeJS.ProcessEnv {
   return env;
 }
 
-function contentDir(files: Record<string, string>): string {
+const tempDirs: string[] = [];
+
+afterAll(() => {
+  for (const dir of tempDirs) rmSync(dir, { recursive: true, force: true });
+});
+
+function tempDir(): string {
   const dir = mkdtempSync(join(tmpdir(), 'content-'));
+  tempDirs.push(dir);
+  return dir;
+}
+
+function contentDir(files: Record<string, string>): string {
+  const dir = tempDir();
   for (const [path, text] of Object.entries(files)) {
     mkdirSync(join(dir, path, '..'), { recursive: true });
     writeFileSync(join(dir, path), text);
@@ -208,6 +222,81 @@ describe('AC6: the reference check fails on a dangling reference', () => {
     expect(result.status).toBe(0);
   });
 
+  it('follows a symlinked post folder, as Astro does', () => {
+    const outside = contentDir({
+      'evil/index.md': POST('ghost'),
+    });
+    const dir = contentDir({ 'tags/devops.yaml': TAG });
+    mkdirSync(join(dir, 'posts'));
+    symlinkSync(join(outside, 'evil'), join(dir, 'posts/evil'));
+    const result = run(script, dir);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('posts/evil');
+    expect(result.stderr).toContain('"ghost"');
+  });
+
+  it('resolves merge keys in frontmatter like Astro', () => {
+    const dir = contentDir({
+      'tags/devops.yaml': TAG,
+      'posts/x/index.md': '---\nbase: &b { tags: [ghost] }\n<<: *b\n---\n',
+    });
+    const result = run(script, dir);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('"ghost"');
+  });
+
+  describe('.env precedence matches Vite in production mode', () => {
+    const bad = () =>
+      contentDir({
+        'tags/devops.yaml': TAG,
+        'posts/x/index.md': POST('ghost'),
+      });
+    const good = () =>
+      contentDir({
+        'tags/devops.yaml': TAG,
+        'posts/x/index.md': POST('devops'),
+      });
+    const exitWith = (files: Record<string, string>) =>
+      spawnSync(
+        process.execPath,
+        [join(process.cwd(), 'scripts/check-references.ts')],
+        { cwd: contentDir(files), env: withoutContentDir(), encoding: 'utf8' },
+      ).status;
+    const line = (dir: string) => `PUBLIC_CONTENT_DIR=${dir}\n`;
+
+    it('.env.production beats .env.local', () => {
+      expect(
+        exitWith({
+          '.env.local': line(good()),
+          '.env.production': line(bad()),
+        }),
+      ).toBe(1);
+      expect(
+        exitWith({
+          '.env.local': line(bad()),
+          '.env.production': line(good()),
+        }),
+      ).toBe(0);
+    });
+
+    it('.env.production.local beats everything', () => {
+      expect(
+        exitWith({
+          '.env': line(good()),
+          '.env.local': line(good()),
+          '.env.production': line(good()),
+          '.env.production.local': line(bad()),
+        }),
+      ).toBe(1);
+    });
+
+    it('.env.local beats .env', () => {
+      expect(
+        exitWith({ '.env': line(good()), '.env.local': line(bad()) }),
+      ).toBe(1);
+    });
+  });
+
   it('accepts a valid lowercase tag and post', () => {
     const dir = contentDir({
       'tags/devops.yaml': TAG,
@@ -247,8 +336,10 @@ describe('AC11: an invalid content dir fails the Astro build', () => {
     ['sem-alt', 'coverAlt is required when cover is set'],
     ['sem-tag', 'expected array to have >=1 items'],
   ])('%s exits non-zero for its own rule', (name, message) => {
-    const result = run(build, join(INVALID, name));
+    const outDir = join(tempDir(), 'dist');
+    const result = run([...build, '--outDir', outDir], join(INVALID, name));
     expect(result.status).not.toBe(0);
+    expect(existsSync(outDir)).toBe(false);
     expect(result.stdout + result.stderr).toContain(message);
   });
 });

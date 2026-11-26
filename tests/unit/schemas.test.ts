@@ -59,6 +59,29 @@ describe('AC2-AC5: postSchema', () => {
     );
   });
 
+  it.each([
+    ['1', 'a bare number'],
+    ['Tuesday March 3', 'free text'],
+    ['2026-02-30', 'an impossible calendar date'],
+    ['2026-02-30T09:00:00Z', 'an impossible calendar datetime'],
+    ['2026-13-01', 'month 13'],
+    ['2026-12-01 09:00', 'a datetime with no offset (read in local time)'],
+    ['2026-12-01T09:00:00', 'a datetime with no offset, ISO form'],
+  ])('rejects publishDate %s (%s)', (publishDate) => {
+    expect(issuePaths({ ...valid, publishDate })).toContain('publishDate');
+  });
+
+  it.each([
+    ['2026-12-01', '2026-12-01T00:00:00.000Z'],
+    ['2026-12-01T12:00:00Z', '2026-12-01T12:00:00.000Z'],
+    ['2026-12-01T09:00:00-03:00', '2026-12-01T12:00:00.000Z'],
+    ['2026-12-01T09:00:00.500+00:00', '2026-12-01T09:00:00.500Z'],
+  ])('reads publishDate %s as the same instant everywhere', (value, iso) => {
+    expect(post.parse({ ...valid, publishDate: value }).publishDate).toEqual(
+      new Date(iso),
+    );
+  });
+
   it('accepts a Date object, as YAML produces for an unquoted timestamp', () => {
     const result = post.parse({
       ...valid,

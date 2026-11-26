@@ -20,8 +20,13 @@ export interface EntryRef {
   id: string;
 }
 
-// A blank YAML value is null, and z.coerce.date() would turn it into 1970-01-01.
-const date = z.union([z.date(), z.string().min(1)]).pipe(z.coerce.date());
+// Strings must be an ISO date (read as UTC midnight) or an ISO datetime with an
+// offset or Z. Anything looser goes through the machine's timezone or the JS
+// Date fallback: "1" becomes 2001, "2026-02-30" becomes March 2, and
+// "2026-12-01 09:00" shifts by the build machine's offset. A blank YAML value is
+// null, which z.coerce.date() would turn into 1970-01-01.
+const isoString = z.union([z.iso.date(), z.iso.datetime({ offset: true })]);
+const date = z.union([z.date(), isoString]).pipe(z.coerce.date());
 
 const title = z.string().trim().min(1).max(70);
 const description = z.string().trim().min(50).max(160);

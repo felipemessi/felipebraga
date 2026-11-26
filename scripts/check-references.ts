@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveContentDir } from '../src/lib/content/dir.ts';
 import { idFromFile, invalidIdProblems } from '../src/lib/content/ids.ts';
@@ -17,6 +17,15 @@ function fileIds(dir: string, extension: string): Set<string> {
   );
 }
 
+// Dirent.isDirectory() is false for a symlink, but Astro's glob follows it.
+function isDirectory(path: string): boolean {
+  try {
+    return statSync(path).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 function readPosts(dir: string): {
   posts: PostReferences[];
   problems: string[];
@@ -25,7 +34,7 @@ function readPosts(dir: string): {
   const problems: string[] = [];
   if (!existsSync(dir)) return { posts, problems };
   for (const slug of readdirSync(dir, { withFileTypes: true })) {
-    if (!slug.isDirectory()) continue;
+    if (!isDirectory(join(dir, slug.name))) continue;
     const files = ['index.md', 'index.mdx']
       .map((name) => join(dir, slug.name, name))
       .filter((candidate) => existsSync(candidate));
@@ -44,13 +53,16 @@ function readPosts(dir: string): {
   return { posts, problems };
 }
 
-// Astro reads PUBLIC_ vars from these files too (build mode is production).
-// loadEnvFile never overrides a variable that is already set, so the first
-// file loaded wins and the order below is the priority order.
+// Astro reads PUBLIC_ vars from these files too, through Vite, in build mode
+// "production". Vite applies .env, .env.local, .env.production and
+// .env.production.local with the later one winning. loadEnvFile never
+// overrides a variable that is already set, so the first file loaded wins and
+// the list below is that order reversed. Not mirrored: `astro build --mode`
+// and ${VAR} expansion.
 for (const file of [
   '.env.production.local',
-  '.env.local',
   '.env.production',
+  '.env.local',
   '.env',
 ]) {
   if (existsSync(file)) process.loadEnvFile(file);

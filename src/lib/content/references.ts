@@ -30,7 +30,8 @@ export function parsePostReferences(id: string, source: string): ParsedPost {
   }
   let data: unknown;
   try {
-    data = parse(block);
+    // Astro parses frontmatter with merge keys (<<) on; match it.
+    data = parse(block, { merge: true });
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
     return {
