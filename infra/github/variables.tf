@@ -10,11 +10,6 @@ variable "repository" {
   default     = "felipebraga"
 }
 
-variable "owner_user_id" {
-  description = "Numeric GitHub user ID of the owner, who approves infra applies."
-  type        = number
-}
-
 variable "site_url" {
   description = "Public origin of the site, exposed to builds as PUBLIC_SITE_URL. Null until the production address is known."
   type        = string

@@ -356,7 +356,7 @@ describe('infra and deploy: workflows', () => {
       expect(job('infra', 'apply')).toMatch(/needs: plan/);
     });
 
-    it('AC11: applies the saved plan, not a fresh one, and asks for one approval', () => {
+    it('AC11: applies the saved plan, not a fresh one, with no manual step', () => {
       expect(job('infra', 'plan')).toContain('-out=tfplan');
       expect(job('infra', 'plan')).toContain('plan-${{ matrix.root }}');
       const apply = job('infra', 'apply');
@@ -474,7 +474,11 @@ describe('infra and deploy: terraform roots', () => {
       expect(token(name), name).not.toContain('r2_storage_write');
     }
     expect(token('infra')).toContain('r2_storage_write');
-    expect(token('infra')).not.toContain('workers_scripts_write');
+    // The Worker custom domain is an account-level resource, so the infra token
+    // needs Workers Scripts Write, but only behind the domain switch.
+    expect(token('infra')).toMatch(
+      /var\.enable_domain_permissions \? \[\{ id = data\.[a-z_]+\.workers_scripts_write\.result\[0\]\.id \}\] : \[\]/,
+    );
     const outputs = read('infra/bootstrap/outputs.tf');
     for (const name of [
       'deploy_api_token',
@@ -546,7 +550,7 @@ describe('infra and deploy: terraform roots', () => {
     expect(main).toMatch(/pull_request \{/);
   });
 
-  it('AC10: gives infra applies their own approval and leaves production open', () => {
+  it('AC10: keeps infra applies on main without a reviewer, like production', () => {
     const main = read('infra/github/main.tf');
     const environment = (name: string): string =>
       new RegExp(
@@ -562,8 +566,10 @@ describe('infra and deploy: terraform roots', () => {
     }
     expect(environment('production')).not.toContain('reviewers');
     expect(environment('infra_plan')).not.toContain('reviewers');
-    expect(environment('infra')).toContain('reviewers');
+    // The merge to main is the approval: the plan was reviewed on the pull request.
+    expect(environment('infra')).not.toContain('reviewers');
     expect(main).toMatch(/"production_main" \{[^}]*branch_pattern = "main"/s);
+    expect(main).toMatch(/"infra_main" \{[^}]*branch_pattern = "main"/s);
   });
 
   it('AC10: takes required status checks from a variable, set to the ci-gate job', () => {

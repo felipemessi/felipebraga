@@ -2,8 +2,8 @@ name: Infra
 
 # Terraform for Cloudflare and GitHub. Pull requests that touch infra/ get
 # static checks and a plan comment; a merge to main saves a plan and applies that
-# exact plan behind the manual approval of the `infra` environment; a weekly plan
-# reports drift as an issue. The bootstrap root is applied once, locally, and is
+# exact plan with no manual step (the merge is the approval, and the plan was
+# already reviewed on the pull request); a weekly plan reports drift as an issue. The bootstrap root is applied once, locally, and is
 # never run here.
 #
 # Secrets live in the `infra-plan` and `infra` environments and only reach the
@@ -197,7 +197,7 @@ jobs:
     needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # One manual approval for both roots: read the plan job summaries first.
+    # No reviewer on this environment: it holds the secrets and limits the apply to main.
     environment: infra
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
