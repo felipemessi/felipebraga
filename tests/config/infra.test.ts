@@ -289,6 +289,19 @@ describe('infra and deploy: workflows', () => {
       expect(job('deploy', 'deploy')).not.toContain('creds');
     });
 
+    it('AC5: skips with a warning until the first deploy has created the Worker', () => {
+      const upload = job('preview', 'upload');
+      expect(upload).toContain('id: upload');
+      expect(upload).toContain('does not yet exist');
+      expect(upload).toContain('::warning title=Preview skipped::');
+      // Only that one error is tolerated: any other wrangler failure still fails.
+      expect(upload).toMatch(/exit 0\n\s+fi\n\s+exit 1/);
+      // The PR comment never posts when the upload was skipped.
+      expect(upload).toMatch(
+        /if: github\.event_name == 'pull_request'[^\n]*steps\.upload\.outputs\.skip != 'true'/,
+      );
+    });
+
     it('AC5: fails instead of posting an empty preview URL', () => {
       expect(job('preview', 'upload')).toMatch(/if \[ -z "\$url" \]/);
     });

@@ -76,7 +76,7 @@ Production has `workers_dev` off in `wrangler.jsonc`. Keep the account's `worker
 
 [infra.yml](../.github/workflows/infra.yml) checks every root (`fmt`, `validate`, `tflint`, `trivy config`) and posts a plan on each same-repository PR that touches `infra/`. A merge to `main` saves each plan as a one-day artifact (it holds no secret) and the `apply` job applies those exact plans after one approval in the `infra` environment: read the _plan_ job summaries before approving. A weekly plan opens an issue when it finds drift and closes it when the plan is clean again.
 
-Until the secrets exist, `preview.yml` skips its upload and `infra.yml` skips its plan and apply, each with a warning, so pull requests stay green during the one-time setup. `deploy.yml` has no such escape: a production deploy without credentials fails.
+Until the secrets exist (and, for previews, until the first production deploy has created the Worker), `preview.yml` skips its upload and `infra.yml` skips its plan and apply, each with a warning, so pull requests stay green during the one-time setup. `deploy.yml` has no such escape: a production deploy without credentials fails.
 
 The `production` environment has no required reviewer on purpose: CMS content commits use it, and they must go live in minutes. Only infra applies wait for approval.
 
